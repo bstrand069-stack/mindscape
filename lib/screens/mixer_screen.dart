@@ -1,3 +1,4 @@
+import 'sound_library_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -18,6 +19,7 @@ class _MixerScreenState extends State<MixerScreen> {
   final AudioPlayer _tonePlayer = AudioPlayer();
 
   late final SoundTrack rainTrack;
+  final List<SoundTrack> extraTracks = [];
 
   bool loading = true;
   bool playing = false;
@@ -128,33 +130,42 @@ class _MixerScreenState extends State<MixerScreen> {
   }
 
   Future<void> _togglePlayback() async {
-    if (loading || audioError != null || toneUpdating) {
-      return;
-    }
-
-    if (playing) {
-      await _audioService.pauseTrack(rainTrack.id);
-      await _tonePlayer.pause();
-
-      if (!mounted) return;
-
-      setState(() {
-        playing = false;
-      });
-    } else {
-      _audioService.playTrack(rainTrack.id);
-
-      if (toneType != 'None') {
-        _tonePlayer.play();
-      }
-
-      if (!mounted) return;
-
-      setState(() {
-        playing = true;
-      });
-    }
+  if (loading || audioError != null || toneUpdating) {
+    return;
   }
+
+  if (playing) {
+    await _audioService.pauseTrack(rainTrack.id);
+
+    for (final track in extraTracks) {
+      await _audioService.pauseTrack(track.id);
+    }
+
+    await _tonePlayer.pause();
+
+    if (!mounted) return;
+
+    setState(() {
+      playing = false;
+    });
+  } else {
+    _audioService.playTrack(rainTrack.id);
+
+    for (final track in extraTracks) {
+      _audioService.playTrack(track.id);
+    }
+
+    if (toneType != 'None') {
+      _tonePlayer.play();
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      playing = true;
+    });
+  }
+}
 
   Future<void> _setRainVolume(double value) async {
     setState(() {
@@ -203,6 +214,50 @@ class _MixerScreenState extends State<MixerScreen> {
     carrierPitch = value;
     await _generateTone();
   }
+
+  Future<void> _addSound(String name) async {
+  
+  if (name == 'Rain') {
+  return;
+}
+  
+  if (name == 'Ocean') {
+    if (extraTracks.any((track) => track.id == 'ocean')) {
+      return;
+    }
+
+    final oceanTrack = SoundTrack(
+      id: 'ocean',
+      name: 'Ocean',
+      assetPath: 'assets/audio/nature/ocean.mp3',
+      category: SoundCategory.nature,
+      volume: 0.25,
+      enabled: true,
+    );
+
+    try {
+      await _audioService.loadTrack(oceanTrack);
+
+      if (playing) {
+        _audioService.playTrack(oceanTrack.id);
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        extraTracks.add(oceanTrack);
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not load Ocean: $e'),
+        ),
+      );
+    }
+  }
+}
 
   @override
   void dispose() {
@@ -358,26 +413,60 @@ class _MixerScreenState extends State<MixerScreen> {
                       value: rainTrack.volume,
                       onChanged: _setRainVolume,
                     ),
-                    const SizedBox(height: 18),
-                    _soundRow(
-                      icon: Icons.graphic_eq_rounded,
-                      name: toneType == 'None'
-                          ? 'Tone Off'
-                          : '$brainwave $toneType',
-                      value: toneVolume,
-                      onChanged: _setToneVolume,
-                    ),
-                    const SizedBox(height: 14),
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Sound'),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-              if (loading)
+
+for (final track in extraTracks) ...[
+  const SizedBox(height: 18),
+  _soundRow(
+    icon: Icons.waves_rounded,
+    name: track.name,
+    value: track.volume,
+    onChanged: (value) async {
+      setState(() {
+        track.volume = value;
+      });
+
+      await _audioService.setVolume(
+        track.id,
+        value,
+      );
+    },
+  ),
+],
+
+const SizedBox(height: 18),
+
+_soundRow(
+  icon: Icons.graphic_eq_rounded,
+  name: toneType == 'None'
+      ? 'Tone Off'
+      : '$brainwave $toneType',
+  value: toneVolume,
+  onChanged: _setToneVolume,
+),
+
+const SizedBox(height: 14),
+ OutlinedButton.icon(
+  onPressed: () async {
+    final selectedSound =
+        await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => const SoundLibraryScreen(),
+      ),
+    );
+
+    if (selectedSound == null) return;
+    if (!context.mounted) return;
+
+    await _addSound(selectedSound);
+  },
+  icon: const Icon(Icons.add),
+  label: const Text('Add Sound'),
+),
+],
+), // Column
+), // _sectionCard
+const SizedBox(height: 18),
+if (loading)
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.all(16),
