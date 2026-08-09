@@ -1,9 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:path_provider/path_provider.dart';
+
+import '../models/sound_track.dart';
+import '../services/audio_service.dart';
+import '../services/tone_generator.dart';
 
 class MixerScreen extends StatefulWidget {
   const MixerScreen({super.key});
@@ -13,233 +13,523 @@ class MixerScreen extends StatefulWidget {
 }
 
 class _MixerScreenState extends State<MixerScreen> {
-  final AudioPlayer _rainPlayer = AudioPlayer();
-  final AudioPlayer _thetaPlayer = AudioPlayer();
+  final AudioService _audioService = AudioService();
+  final ToneGenerator _toneGenerator = ToneGenerator();
+  final AudioPlayer _tonePlayer = AudioPlayer();
 
-  double rain = 0.30;
-  double theta = 0.15;
+  late final SoundTrack rainTrack;
 
-  bool playing = false;
   bool loading = true;
+  bool playing = false;
+  bool toneUpdating = false;
   String? audioError;
+
+  String toneType = 'Binaural';
+  String brainwave = 'Theta';
+
+  double carrierPitch = 200;
+  double toneVolume = 0.15;
 
   @override
   void initState() {
     super.initState();
+
+    rainTrack = SoundTrack(
+      id: 'rain',
+      name: 'Rain',
+      assetPath: 'assets/audio/nature/rain.mp3',
+      category: SoundCategory.nature,
+      volume: 0.30,
+      enabled: true,
+    );
+
     _loadAudio();
   }
 
+  double get beatFrequency {
+    switch (brainwave) {
+      case 'Delta':
+        return 2.0;
+      case 'Theta':
+        return 6.0;
+      case 'Alpha':
+        return 10.0;
+      case 'Beta':
+        return 18.0;
+      case 'Gamma':
+        return 40.0;
+      default:
+        return 6.0;
+    }
+  }
+
+  ToneMode get toneMode {
+    return toneType == 'Isochronic'
+        ? ToneMode.isochronic
+        : ToneMode.binaural;
+  }
+
   Future<void> _loadAudio() async {
-  try {
-    debugPrint('Loading rain...');
+    try {
+      await _audioService.loadTrack(rainTrack);
+      await _generateTone();
 
-    final byteData =
-    await rootBundle.load('assets/audio/nature/rain.mp3');
+      if (!mounted) return;
 
-final tempDir = await getTemporaryDirectory();
+      setState(() {
+        loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
 
-final rainFile = File('${tempDir.path}/rain.mp3');
+      setState(() {
+        loading = false;
+        audioError = e.toString();
+      });
+    }
+  }
 
-await rainFile.writeAsBytes(
-  byteData.buffer.asUint8List(),
-  flush: true,
-);
+  Future<void> _generateTone() async {
+    if (toneType == 'None') {
+      await _tonePlayer.pause();
+      return;
+    }
 
-await _rainPlayer.setFilePath(rainFile.path);
+    if (mounted) {
+      setState(() {
+        toneUpdating = true;
+      });
+    }
 
-final thetaData =
-    await rootBundle.load('assets/audio/binaural/theta.wav');
+    final wasPlaying = playing;
 
-final thetaFile = File('${tempDir.path}/theta.wav');
+    await _tonePlayer.pause();
 
-await thetaFile.writeAsBytes(
-  thetaData.buffer.asUint8List(),
-  flush: true,
-);
+    final toneFile = await _toneGenerator.generate(
+      mode: toneMode,
+      carrierHz: carrierPitch,
+      beatHz: beatFrequency,
+      durationSeconds: 10,
+    );
 
-await _thetaPlayer.setFilePath(thetaFile.path);
+    await _tonePlayer.setFilePath(toneFile.path);
+    await _tonePlayer.setLoopMode(LoopMode.one);
+    await _tonePlayer.setVolume(toneVolume);
 
-await _thetaPlayer.setLoopMode(LoopMode.one);
-await _thetaPlayer.setVolume(theta);
-
-    await _rainPlayer.setLoopMode(LoopMode.one);
-    await _rainPlayer.setVolume(rain);
-
-    debugPrint('Rain loaded successfully');
+    if (wasPlaying) {
+      _tonePlayer.play();
+    }
 
     if (!mounted) return;
 
     setState(() {
-      loading = false;
-    });
-  } catch (e) {
-    debugPrint('AUDIO ERROR: $e');
-
-    if (!mounted) return;
-
-    setState(() {
-      loading = false;
-      audioError = e.toString();
+      toneUpdating = false;
     });
   }
-}
 
   Future<void> _togglePlayback() async {
-  if (loading || audioError != null) return;
+    if (loading || audioError != null || toneUpdating) {
+      return;
+    }
 
-  try {
     if (playing) {
-      await _rainPlayer.pause();
-      await _thetaPlayer.pause();
+      await _audioService.pauseTrack(rainTrack.id);
+      await _tonePlayer.pause();
 
       if (!mounted) return;
 
       setState(() {
         playing = false;
       });
-
-      debugPrint('Audio paused');
     } else {
+      _audioService.playTrack(rainTrack.id);
+
+      if (toneType != 'None') {
+        _tonePlayer.play();
+      }
+
       if (!mounted) return;
 
       setState(() {
         playing = true;
       });
-
-      debugPrint('Starting rain + theta');
-
-      _rainPlayer.play();
-      _thetaPlayer.play();
     }
-  } catch (e) {
-    debugPrint('PLAYBACK ERROR: $e');
-
-    if (!mounted) return;
-
-    setState(() {
-      playing = false;
-    });
   }
-}
 
   Future<void> _setRainVolume(double value) async {
     setState(() {
-      rain = value;
+      rainTrack.volume = value;
     });
 
-    await _rainPlayer.setVolume(value);
+    await _audioService.setVolume(
+      rainTrack.id,
+      value,
+    );
   }
 
-  Future<void> _setThetaVolume(double value) async {
+  Future<void> _setToneVolume(double value) async {
     setState(() {
-      theta = value;
+      toneVolume = value;
     });
 
-    await _thetaPlayer.setVolume(value);
+    await _tonePlayer.setVolume(value);
+  }
+
+  Future<void> _changeToneType(String value) async {
+    setState(() {
+      toneType = value;
+    });
+
+    await _generateTone();
+  }
+
+  Future<void> _changeBrainwave(String value) async {
+    setState(() {
+      brainwave = value;
+    });
+
+    await _generateTone();
+  }
+
+  Future<void> _changeCarrierPitch(double value) async {
+    setState(() {
+      carrierPitch = value;
+    });
+  }
+
+  Future<void> _finishCarrierPitchChange(
+    double value,
+  ) async {
+    carrierPitch = value;
+    await _generateTone();
   }
 
   @override
   void dispose() {
-    _rainPlayer.dispose();
-    _thetaPlayer.dispose();
+    _audioService.dispose();
+    _tonePlayer.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF081C27),
+      backgroundColor: const Color(0xFF061922),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Sound Mixer'),
+        title: const Text('MindScape Mixer'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-
-            const Text(
-              'Rain + Theta',
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            if (loading)
-              const Text(
-                'Loading audio...',
-              ),
-
-            if (audioError != null)
-              Text(
-                'Audio error:\n$audioError',
-                style: const TextStyle(
-                  color: Colors.redAccent,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            10,
+            20,
+            30,
+          ),
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.stretch,
+            children: [
+              _sectionCard(
+                title: 'Brainwave Tone',
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Tone Type',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        _choiceChip('Binaural'),
+                        _choiceChip('Isochronic'),
+                        _choiceChip('None'),
+                      ],
+                    ),
+                    const SizedBox(height: 22),
+                    const Text(
+                      'Brainwave',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _brainwaveChip('Delta'),
+                        _brainwaveChip('Theta'),
+                        _brainwaveChip('Alpha'),
+                        _brainwaveChip('Beta'),
+                        _brainwaveChip('Gamma'),
+                      ],
+                    ),
+                    const SizedBox(height: 22),
+                    Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Beat Frequency',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '${beatFrequency.toStringAsFixed(1)} Hz',
+                          style: const TextStyle(
+                            color: Color(0xFF82E5D4),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Carrier Pitch',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '${carrierPitch.round()} Hz',
+                          style: const TextStyle(
+                            color: Color(0xFF82E5D4),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      min: 100,
+                      max: 400,
+                      divisions: 30,
+                      value: carrierPitch,
+                      onChanged: _changeCarrierPitch,
+                      onChangeEnd:
+                          _finishCarrierPitchChange,
+                    ),
+                    if (toneUpdating)
+                      const Padding(
+                        padding:
+                            EdgeInsets.only(top: 8),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child:
+                                  CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              'Updating tone...',
+                              style: TextStyle(
+                                color: Colors.white60,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
-                textAlign: TextAlign.center,
               ),
-
-            const SizedBox(height: 20),
-
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Rain',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-
-            Slider(
-              value: rain,
-              onChanged: _setRainVolume,
-            ),
-
-            const SizedBox(height: 20),
-
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Theta Beat',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-
-            Slider(
-              value: theta,
-              onChanged: _setThetaVolume,
-            ),
-
-            const Spacer(),
-
-            SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: FilledButton.icon(
-                onPressed:
-                    loading || audioError != null
-                    ? null
-                    : _togglePlayback,
-                icon: Icon(
-                  playing
-                      ? Icons.pause
-                      : Icons.play_arrow,
-                ),
-                label: Text(
-                  playing
-                      ? 'Pause Session'
-                      : 'Begin Session',
+              const SizedBox(height: 18),
+              _sectionCard(
+                title: 'Soundscape',
+                child: Column(
+                  children: [
+                    _soundRow(
+                      icon: Icons.water_drop_rounded,
+                      name: 'Rain',
+                      value: rainTrack.volume,
+                      onChanged: _setRainVolume,
+                    ),
+                    const SizedBox(height: 18),
+                    _soundRow(
+                      icon: Icons.graphic_eq_rounded,
+                      name: toneType == 'None'
+                          ? 'Tone Off'
+                          : '$brainwave $toneType',
+                      value: toneVolume,
+                      onChanged: _setToneVolume,
+                    ),
+                    const SizedBox(height: 14),
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Sound'),
+                    ),
+                  ],
                 ),
               ),
-            ),
-
-            const SizedBox(height: 30),
-          ],
+              const SizedBox(height: 18),
+              if (loading)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              if (audioError != null)
+                Text(
+                  'Audio error:\n$audioError',
+                  style: const TextStyle(
+                    color: Colors.redAccent,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 62,
+                child: FilledButton.icon(
+                  onPressed:
+                      loading ||
+                              audioError != null ||
+                              toneUpdating
+                          ? null
+                          : _togglePlayback,
+                  icon: Icon(
+                    playing
+                        ? Icons.pause_rounded
+                        : Icons.play_arrow_rounded,
+                  ),
+                  label: Text(
+                    playing
+                        ? 'Pause Session'
+                        : 'Begin Session',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor:
+                        const Color(0xFF78DCC8),
+                    foregroundColor:
+                        const Color(0xFF05201D),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(18),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _sectionCard({
+    required String title,
+    required Widget child,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color:
+              Colors.white.withValues(alpha: 0.08),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 18),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _choiceChip(String label) {
+    final selected = toneType == label;
+
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) {
+        _changeToneType(label);
+      },
+    );
+  }
+
+  Widget _brainwaveChip(String label) {
+    final selected = brainwave == label;
+
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: toneType == 'None'
+          ? null
+          : (_) {
+              _changeBrainwave(label);
+            },
+    );
+  }
+
+  Widget _soundRow({
+    required IconData icon,
+    required String name,
+    required double value,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Icon(
+              icon,
+              color: const Color(0xFF82E5D4),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Text(
+              '${(value * 100).round()}%',
+              style: const TextStyle(
+                color: Color(0xFF82E5D4),
+              ),
+            ),
+          ],
+        ),
+        Slider(
+          value: value,
+          onChanged: onChanged,
+        ),
+      ],
     );
   }
 }
