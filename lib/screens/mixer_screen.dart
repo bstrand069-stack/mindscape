@@ -294,6 +294,16 @@ class _MixerScreenState extends State<MixerScreen> {
     super.dispose();
   }
 
+  Future<void> _removeExtraTrack(SoundTrack track) async {
+    await _audioService.pauseTrack(track.id);
+
+    if (!mounted) return;
+
+    setState(() {
+      extraTracks.removeWhere((existing) => existing.id == track.id);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -450,21 +460,34 @@ class _MixerScreenState extends State<MixerScreen> {
 
                     for (final track in extraTracks) ...[
                       const SizedBox(height: 18),
-                      _soundRow(
-                        icon: Icons.waves_rounded,
-                        name: track.name,
-                        value: track.volume,
-                        onChanged: (value) async {
-                          setState(() {
-                            track.volume = value;
-                          });
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _soundRow(
+                              icon: Icons.waves_rounded,
+                              name: track.name,
+                              value: track.volume,
+                              onChanged: (value) async {
+                                setState(() {
+                                  track.volume = value;
+                                });
 
-                          await _audioService.setVolume(track.id, value);
-                        },
+                                await _audioService.setVolume(track.id, value);
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            tooltip: 'Remove ${track.name}',
+                            onPressed: () {
+                              _removeExtraTrack(track);
+                            },
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
                       ),
                     ],
-
-                    const SizedBox(height: 18),
 
                     _soundRow(
                       icon: Icons.graphic_eq_rounded,
