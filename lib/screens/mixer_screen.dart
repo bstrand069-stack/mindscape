@@ -31,6 +31,7 @@ class _MixerScreenState extends State<MixerScreen> {
 
   double carrierPitch = 200;
   double toneVolume = 0.15;
+  double beatHz = 6.0;
 
   @override
   void initState() {
@@ -48,27 +49,10 @@ class _MixerScreenState extends State<MixerScreen> {
     _loadAudio();
   }
 
-  double get beatFrequency {
-    switch (brainwave) {
-      case 'Delta':
-        return 2.0;
-      case 'Theta':
-        return 6.0;
-      case 'Alpha':
-        return 10.0;
-      case 'Beta':
-        return 18.0;
-      case 'Gamma':
-        return 40.0;
-      default:
-        return 6.0;
-    }
-  }
+  double get beatFrequency => beatHz;
 
   ToneMode get toneMode {
-    return toneType == 'Isochronic'
-        ? ToneMode.isochronic
-        : ToneMode.binaural;
+    return toneType == 'Isochronic' ? ToneMode.isochronic : ToneMode.binaural;
   }
 
   Future<void> _loadAudio() async {
@@ -130,52 +114,49 @@ class _MixerScreenState extends State<MixerScreen> {
   }
 
   Future<void> _togglePlayback() async {
-  if (loading || audioError != null || toneUpdating) {
-    return;
+    if (loading || audioError != null || toneUpdating) {
+      return;
+    }
+
+    if (playing) {
+      await _audioService.pauseTrack(rainTrack.id);
+
+      for (final track in extraTracks) {
+        await _audioService.pauseTrack(track.id);
+      }
+
+      await _tonePlayer.pause();
+
+      if (!mounted) return;
+
+      setState(() {
+        playing = false;
+      });
+    } else {
+      _audioService.playTrack(rainTrack.id);
+
+      for (final track in extraTracks) {
+        _audioService.playTrack(track.id);
+      }
+
+      if (toneType != 'None') {
+        _tonePlayer.play();
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        playing = true;
+      });
+    }
   }
-
-  if (playing) {
-    await _audioService.pauseTrack(rainTrack.id);
-
-    for (final track in extraTracks) {
-      await _audioService.pauseTrack(track.id);
-    }
-
-    await _tonePlayer.pause();
-
-    if (!mounted) return;
-
-    setState(() {
-      playing = false;
-    });
-  } else {
-    _audioService.playTrack(rainTrack.id);
-
-    for (final track in extraTracks) {
-      _audioService.playTrack(track.id);
-    }
-
-    if (toneType != 'None') {
-      _tonePlayer.play();
-    }
-
-    if (!mounted) return;
-
-    setState(() {
-      playing = true;
-    });
-  }
-}
 
   Future<void> _setRainVolume(double value) async {
     setState(() {
       rainTrack.volume = value;
     });
 
-    await _audioService.setVolume(
-      rainTrack.id,
-      value,
-    );
+    await _audioService.setVolume(rainTrack.id, value);
   }
 
   Future<void> _setToneVolume(double value) async {
@@ -194,70 +175,88 @@ class _MixerScreenState extends State<MixerScreen> {
     await _generateTone();
   }
 
-  Future<void> _changeBrainwave(String value) async {
-    setState(() {
-      brainwave = value;
-    });
-
-    await _generateTone();
-  }
-
   Future<void> _changeCarrierPitch(double value) async {
     setState(() {
       carrierPitch = value;
     });
   }
 
-  Future<void> _finishCarrierPitchChange(
-    double value,
-  ) async {
+  Future<void> _finishCarrierPitchChange(double value) async {
     carrierPitch = value;
     await _generateTone();
   }
 
+  Future<void> _changeBrainwave(String value) async {
+    double defaultFrequency;
+
+    switch (value) {
+      case 'Delta':
+        defaultFrequency = 2.0;
+        break;
+      case 'Theta':
+        defaultFrequency = 6.0;
+        break;
+      case 'Alpha':
+        defaultFrequency = 10.0;
+        break;
+      case 'Beta':
+        defaultFrequency = 18.0;
+        break;
+      case 'Gamma':
+        defaultFrequency = 40.0;
+        break;
+      default:
+        defaultFrequency = 6.0;
+    }
+
+    setState(() {
+      brainwave = value;
+      beatHz = defaultFrequency;
+    });
+
+    await _generateTone();
+  }
+
   Future<void> _addSound(String name) async {
-  
-  if (name == 'Rain') {
-  return;
-}
-  
-  if (name == 'Ocean') {
-    if (extraTracks.any((track) => track.id == 'ocean')) {
+    if (name == 'Rain') {
       return;
     }
 
-    final oceanTrack = SoundTrack(
-      id: 'ocean',
-      name: 'Ocean',
-      assetPath: 'assets/audio/nature/ocean.mp3',
-      category: SoundCategory.nature,
-      volume: 0.25,
-      enabled: true,
-    );
-
-    try {
-      await _audioService.loadTrack(oceanTrack);
-
-      if (playing) {
-        _audioService.playTrack(oceanTrack.id);
+    if (name == 'Ocean') {
+      if (extraTracks.any((track) => track.id == 'ocean')) {
+        return;
       }
 
-      if (!mounted) return;
-
-      setState(() {
-        extraTracks.add(oceanTrack);
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Could not load Ocean: $e'),
-        ),
+      final oceanTrack = SoundTrack(
+        id: 'ocean',
+        name: 'Ocean',
+        assetPath: 'assets/audio/nature/ocean.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
       );
+
+      try {
+        await _audioService.loadTrack(oceanTrack);
+
+        if (playing) {
+          _audioService.playTrack(oceanTrack.id);
+        }
+
+        if (!mounted) return;
+
+        setState(() {
+          extraTracks.add(oceanTrack);
+        });
+      } catch (e) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not load Ocean: $e')));
+      }
     }
   }
-}
 
   @override
   void dispose() {
@@ -276,27 +275,18 @@ class _MixerScreenState extends State<MixerScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            20,
-            10,
-            20,
-            30,
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _sectionCard(
                 title: 'Brainwave Tone',
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
                       'Tone Type',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 10),
                     Wrap(
@@ -310,9 +300,7 @@ class _MixerScreenState extends State<MixerScreen> {
                     const SizedBox(height: 22),
                     const Text(
                       'Brainwave',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 10),
                     Wrap(
@@ -328,14 +316,12 @@ class _MixerScreenState extends State<MixerScreen> {
                     ),
                     const SizedBox(height: 22),
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
                           'Beat Frequency',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
+
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                         Text(
                           '${beatFrequency.toStringAsFixed(1)} Hz',
@@ -346,16 +332,30 @@ class _MixerScreenState extends State<MixerScreen> {
                         ),
                       ],
                     ),
+
+                    Slider(
+                      min: 0.5,
+                      max: 40.0,
+                      divisions: 395,
+                      value: beatHz,
+                      onChanged: (value) {
+                        setState(() {
+                          beatHz = value;
+                        });
+                      },
+                      onChangeEnd: (value) async {
+                        beatHz = value;
+                        await _generateTone();
+                      },
+                    ),
+
                     const SizedBox(height: 16),
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
                           'Carrier Pitch',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                         Text(
                           '${carrierPitch.round()} Hz',
@@ -372,29 +372,22 @@ class _MixerScreenState extends State<MixerScreen> {
                       divisions: 30,
                       value: carrierPitch,
                       onChanged: _changeCarrierPitch,
-                      onChangeEnd:
-                          _finishCarrierPitchChange,
+                      onChangeEnd: _finishCarrierPitchChange,
                     ),
                     if (toneUpdating)
                       const Padding(
-                        padding:
-                            EdgeInsets.only(top: 8),
+                        padding: EdgeInsets.only(top: 8),
                         child: Row(
                           children: [
                             SizedBox(
                               width: 16,
                               height: 16,
-                              child:
-                                  CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                             SizedBox(width: 10),
                             Text(
                               'Updating tone...',
-                              style: TextStyle(
-                                color: Colors.white60,
-                              ),
+                              style: TextStyle(color: Colors.white60),
                             ),
                           ],
                         ),
@@ -414,59 +407,56 @@ class _MixerScreenState extends State<MixerScreen> {
                       onChanged: _setRainVolume,
                     ),
 
-for (final track in extraTracks) ...[
-  const SizedBox(height: 18),
-  _soundRow(
-    icon: Icons.waves_rounded,
-    name: track.name,
-    value: track.volume,
-    onChanged: (value) async {
-      setState(() {
-        track.volume = value;
-      });
+                    for (final track in extraTracks) ...[
+                      const SizedBox(height: 18),
+                      _soundRow(
+                        icon: Icons.waves_rounded,
+                        name: track.name,
+                        value: track.volume,
+                        onChanged: (value) async {
+                          setState(() {
+                            track.volume = value;
+                          });
 
-      await _audioService.setVolume(
-        track.id,
-        value,
-      );
-    },
-  ),
-],
+                          await _audioService.setVolume(track.id, value);
+                        },
+                      ),
+                    ],
 
-const SizedBox(height: 18),
+                    const SizedBox(height: 18),
 
-_soundRow(
-  icon: Icons.graphic_eq_rounded,
-  name: toneType == 'None'
-      ? 'Tone Off'
-      : '$brainwave $toneType',
-  value: toneVolume,
-  onChanged: _setToneVolume,
-),
+                    _soundRow(
+                      icon: Icons.graphic_eq_rounded,
+                      name: toneType == 'None'
+                          ? 'Tone Off'
+                          : '$brainwave $toneType',
+                      value: toneVolume,
+                      onChanged: _setToneVolume,
+                    ),
 
-const SizedBox(height: 14),
- OutlinedButton.icon(
-  onPressed: () async {
-    final selectedSound =
-        await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) => const SoundLibraryScreen(),
-      ),
-    );
+                    const SizedBox(height: 14),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final selectedSound = await Navigator.of(context)
+                            .push<String>(
+                              MaterialPageRoute(
+                                builder: (_) => const SoundLibraryScreen(),
+                              ),
+                            );
 
-    if (selectedSound == null) return;
-    if (!context.mounted) return;
+                        if (selectedSound == null) return;
+                        if (!context.mounted) return;
 
-    await _addSound(selectedSound);
-  },
-  icon: const Icon(Icons.add),
-  label: const Text('Add Sound'),
-),
-],
-), // Column
-), // _sectionCard
-const SizedBox(height: 18),
-if (loading)
+                        await _addSound(selectedSound);
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Sound'),
+                    ),
+                  ],
+                ), // Column
+              ), // _sectionCard
+              const SizedBox(height: 18),
+              if (loading)
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.all(16),
@@ -476,43 +466,31 @@ if (loading)
               if (audioError != null)
                 Text(
                   'Audio error:\n$audioError',
-                  style: const TextStyle(
-                    color: Colors.redAccent,
-                  ),
+                  style: const TextStyle(color: Colors.redAccent),
                   textAlign: TextAlign.center,
                 ),
               const SizedBox(height: 10),
               SizedBox(
                 height: 62,
                 child: FilledButton.icon(
-                  onPressed:
-                      loading ||
-                              audioError != null ||
-                              toneUpdating
-                          ? null
-                          : _togglePlayback,
+                  onPressed: loading || audioError != null || toneUpdating
+                      ? null
+                      : _togglePlayback,
                   icon: Icon(
-                    playing
-                        ? Icons.pause_rounded
-                        : Icons.play_arrow_rounded,
+                    playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
                   ),
                   label: Text(
-                    playing
-                        ? 'Pause Session'
-                        : 'Begin Session',
+                    playing ? 'Pause Session' : 'Begin Session',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor:
-                        const Color(0xFF78DCC8),
-                    foregroundColor:
-                        const Color(0xFF05201D),
+                    backgroundColor: const Color(0xFF78DCC8),
+                    foregroundColor: const Color(0xFF05201D),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(18),
                     ),
                   ),
                 ),
@@ -524,30 +502,20 @@ if (loading)
     );
   }
 
-  Widget _sectionCard({
-    required String title,
-    required Widget child,
-  }) {
+  Widget _sectionCard({required String title, required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color:
-              Colors.white.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-            ),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 18),
           child,
@@ -592,10 +560,7 @@ if (loading)
       children: [
         Row(
           children: [
-            Icon(
-              icon,
-              color: const Color(0xFF82E5D4),
-            ),
+            Icon(icon, color: const Color(0xFF82E5D4)),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -608,16 +573,11 @@ if (loading)
             ),
             Text(
               '${(value * 100).round()}%',
-              style: const TextStyle(
-                color: Color(0xFF82E5D4),
-              ),
+              style: const TextStyle(color: Color(0xFF82E5D4)),
             ),
           ],
         ),
-        Slider(
-          value: value,
-          onChanged: onChanged,
-        ),
+        Slider(value: value, onChanged: onChanged),
       ],
     );
   }
