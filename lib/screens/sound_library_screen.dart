@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 class SoundLibraryScreen extends StatelessWidget {
-  const SoundLibraryScreen({super.key});
+  const SoundLibraryScreen({
+    super.key,
+    this.activeSounds = const <String>{},
+  });
+
+  final Set<String> activeSounds;
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +34,11 @@ class SoundLibraryScreen extends StatelessWidget {
             const SizedBox(height: 10),
         itemBuilder: (context, index) {
           final sound = sounds[index];
+          final isActive =
+              activeSounds.contains(sound.$1);
 
           return ListTile(
+            enabled: !isActive,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 18,
               vertical: 8,
@@ -46,20 +54,38 @@ class SoundLibraryScreen extends StatelessWidget {
             ),
             leading: Icon(
               sound.$2,
-              color: const Color(0xFF82E5D4),
+              color: isActive
+                  ? Colors.white38
+                  : const Color(0xFF82E5D4),
             ),
             title: Text(
               sound.$1,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w600,
+                color: isActive
+                    ? Colors.white38
+                    : null,
               ),
             ),
-            trailing: const Icon(
-              Icons.add_circle_outline_rounded,
+            subtitle: isActive
+                ? const Text('Already added')
+                : null,
+            trailing: Icon(
+              isActive
+                  ? Icons.check_circle_rounded
+                  : Icons.add_circle_outline_rounded,
+              color: isActive
+                  ? Colors.white38
+                  : const Color(0xFF82E5D4),
             ),
-            onTap: () {
-              Navigator.pop(context, sound.$1);
-            },
+            onTap: isActive
+                ? null
+                : () {
+                    Navigator.pop(
+                      context,
+                      sound.$1,
+                    );
+                  },
           );
         },
       ),

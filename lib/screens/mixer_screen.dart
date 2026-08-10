@@ -222,39 +222,54 @@ class _MixerScreenState extends State<MixerScreen> {
       return;
     }
 
-    if (name == 'Ocean') {
-      if (extraTracks.any((track) => track.id == 'ocean')) {
-        return;
-      }
-
-      final oceanTrack = SoundTrack(
+    final soundMap = <String, SoundTrack>{
+      'Ocean': SoundTrack(
         id: 'ocean',
         name: 'Ocean',
         assetPath: 'assets/audio/nature/ocean.mp3',
         category: SoundCategory.nature,
         volume: 0.25,
         enabled: true,
-      );
+      ),
 
-      try {
-        await _audioService.loadTrack(oceanTrack);
+      'Forest': SoundTrack(
+        id: 'forest',
+        name: 'Forest',
+        assetPath: 'assets/audio/nature/forest.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+    };
 
-        if (playing) {
-          _audioService.playTrack(oceanTrack.id);
-        }
+    final track = soundMap[name];
 
-        if (!mounted) return;
+    if (track == null) {
+      return;
+    }
 
-        setState(() {
-          extraTracks.add(oceanTrack);
-        });
-      } catch (e) {
-        if (!mounted) return;
+    if (extraTracks.any((existing) => existing.id == track.id)) {
+      return;
+    }
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Could not load Ocean: $e')));
+    try {
+      await _audioService.loadTrack(track);
+
+      if (playing) {
+        _audioService.playTrack(track.id);
       }
+
+      if (!mounted) return;
+
+      setState(() {
+        extraTracks.add(track);
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not load ${track.name}: $e')),
+      );
     }
   }
 
@@ -466,7 +481,12 @@ class _MixerScreenState extends State<MixerScreen> {
                         final selectedSound = await Navigator.of(context)
                             .push<String>(
                               MaterialPageRoute(
-                                builder: (_) => const SoundLibraryScreen(),
+                                builder: (_) => SoundLibraryScreen(
+                                  activeSounds: {
+                                    'Rain',
+                                    ...extraTracks.map((track) => track.name),
+                                  },
+                                ),
                               ),
                             );
 
@@ -549,7 +569,7 @@ class _MixerScreenState extends State<MixerScreen> {
       ),
     );
   }
-  
+
   Widget _choiceChip(String label) {
     final selected = toneType == label;
 

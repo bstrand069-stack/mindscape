@@ -36,6 +36,7 @@ class ToneGenerator {
 
       double left;
       double right;
+      
 
       if (mode == ToneMode.binaural) {
         left = sin(
