@@ -258,6 +258,20 @@ class _MixerScreenState extends State<MixerScreen> {
     }
   }
 
+  String get currentBrainwave {
+    if (beatHz < 4.0) {
+      return 'Delta';
+    } else if (beatHz < 8.0) {
+      return 'Theta';
+    } else if (beatHz < 12.0) {
+      return 'Alpha';
+    } else if (beatHz < 30.0) {
+      return 'Beta';
+    } else {
+      return 'Gamma';
+    }
+  }
+
   @override
   void dispose() {
     _audioService.dispose();
@@ -341,13 +355,25 @@ class _MixerScreenState extends State<MixerScreen> {
                       onChanged: (value) {
                         setState(() {
                           beatHz = value;
+
+                          if (value < 4.0) {
+                            brainwave = 'Delta';
+                          } else if (value < 8.0) {
+                            brainwave = 'Theta';
+                          } else if (value < 12.0) {
+                            brainwave = 'Alpha';
+                          } else if (value < 30.0) {
+                            brainwave = 'Beta';
+                          } else {
+                            brainwave = 'Gamma';
+                          }
                         });
                       },
                       onChangeEnd: (value) async {
                         beatHz = value;
                         await _generateTone();
                       },
-                    ),
+                    ), // Slider
 
                     const SizedBox(height: 16),
                     Row(
@@ -429,7 +455,7 @@ class _MixerScreenState extends State<MixerScreen> {
                       icon: Icons.graphic_eq_rounded,
                       name: toneType == 'None'
                           ? 'Tone Off'
-                          : '$brainwave $toneType',
+                          : '$currentBrainwave $toneType',
                       value: toneVolume,
                       onChanged: _setToneVolume,
                     ),
@@ -523,7 +549,7 @@ class _MixerScreenState extends State<MixerScreen> {
       ),
     );
   }
-
+  
   Widget _choiceChip(String label) {
     final selected = toneType == label;
 
@@ -537,7 +563,7 @@ class _MixerScreenState extends State<MixerScreen> {
   }
 
   Widget _brainwaveChip(String label) {
-    final selected = brainwave == label;
+    final selected = currentBrainwave == label;
 
     return ChoiceChip(
       label: Text(label),
