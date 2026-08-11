@@ -244,7 +244,52 @@ class _MixerScreenState extends State<MixerScreen> {
         volume: 0.25,
         enabled: true,
       ),
-    };
+
+      'Thunder': SoundTrack(
+        id: 'thunder',
+        name: 'Thunder',
+        assetPath: 'assets/audio/nature/thunder.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+
+      'Fireplace': SoundTrack(
+        id: 'fireplace',
+        name: 'Fireplace',
+        assetPath: 'assets/audio/nature/fireplace.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+
+      'Wind': SoundTrack(
+        id: 'wind',
+        name: 'Wind',
+        assetPath: 'assets/audio/nature/wind.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+
+      'Stream': SoundTrack(
+        id: 'stream',
+        name: 'Stream',
+        assetPath: 'assets/audio/nature/stream.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+    
+    'Night': SoundTrack(
+  id: 'night',
+  name: 'Night',
+  assetPath: 'assets/audio/nature/night.mp3',
+  category: SoundCategory.nature,
+  volume: 0.25,
+  enabled: true,
+),
+};
 
     final track = soundMap[name];
 
