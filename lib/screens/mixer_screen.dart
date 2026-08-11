@@ -18,8 +18,7 @@ class _MixerScreenState extends State<MixerScreen> {
   final ToneGenerator _toneGenerator = ToneGenerator();
   final AudioPlayer _tonePlayer = AudioPlayer();
 
-  late final SoundTrack rainTrack;
-  final List<SoundTrack> extraTracks = [];
+  final List<SoundTrack> activeTracks = [];
 
   bool loading = true;
   bool playing = false;
@@ -37,13 +36,15 @@ class _MixerScreenState extends State<MixerScreen> {
   void initState() {
     super.initState();
 
-    rainTrack = SoundTrack(
-      id: 'rain',
-      name: 'Rain',
-      assetPath: 'assets/audio/nature/rain.mp3',
-      category: SoundCategory.nature,
-      volume: 0.30,
-      enabled: true,
+    activeTracks.add(
+      SoundTrack(
+        id: 'rain',
+        name: 'Rain',
+        assetPath: 'assets/audio/nature/rain.mp3',
+        category: SoundCategory.nature,
+        volume: 0.30,
+        enabled: true,
+      ),
     );
 
     _loadAudio();
@@ -57,7 +58,9 @@ class _MixerScreenState extends State<MixerScreen> {
 
   Future<void> _loadAudio() async {
     try {
-      await _audioService.loadTrack(rainTrack);
+      for (final track in activeTracks) {
+        await _audioService.loadTrack(track);
+      }
       await _generateTone();
 
       if (!mounted) return;
@@ -119,9 +122,7 @@ class _MixerScreenState extends State<MixerScreen> {
     }
 
     if (playing) {
-      await _audioService.pauseTrack(rainTrack.id);
-
-      for (final track in extraTracks) {
+      for (final track in activeTracks) {
         await _audioService.pauseTrack(track.id);
       }
 
@@ -133,9 +134,7 @@ class _MixerScreenState extends State<MixerScreen> {
         playing = false;
       });
     } else {
-      _audioService.playTrack(rainTrack.id);
-
-      for (final track in extraTracks) {
+      for (final track in activeTracks) {
         _audioService.playTrack(track.id);
       }
 
@@ -151,12 +150,12 @@ class _MixerScreenState extends State<MixerScreen> {
     }
   }
 
-  Future<void> _setRainVolume(double value) async {
+  Future<void> _setTrackVolume(SoundTrack track, double value) async {
     setState(() {
-      rainTrack.volume = value;
+      track.volume = value;
     });
 
-    await _audioService.setVolume(rainTrack.id, value);
+    await _audioService.setVolume(track.id, value);
   }
 
   Future<void> _setToneVolume(double value) async {
@@ -248,7 +247,7 @@ class _MixerScreenState extends State<MixerScreen> {
       return;
     }
 
-    if (extraTracks.any((existing) => existing.id == track.id)) {
+    if (activeTracks.any((existing) => existing.id == track.id)) {
       return;
     }
 
@@ -262,7 +261,7 @@ class _MixerScreenState extends State<MixerScreen> {
       if (!mounted) return;
 
       setState(() {
-        extraTracks.add(track);
+        activeTracks.add(track);
       });
     } catch (e) {
       if (!mounted) return;
@@ -300,7 +299,7 @@ class _MixerScreenState extends State<MixerScreen> {
     if (!mounted) return;
 
     setState(() {
-      extraTracks.removeWhere((existing) => existing.id == track.id);
+      activeTracks.removeWhere((existing) => existing.id == track.id);
     });
   }
 
@@ -451,29 +450,20 @@ class _MixerScreenState extends State<MixerScreen> {
                 title: 'Soundscape',
                 child: Column(
                   children: [
-                    _soundRow(
-                      icon: Icons.water_drop_rounded,
-                      name: 'Rain',
-                      value: rainTrack.volume,
-                      onChanged: _setRainVolume,
-                    ),
-
-                    for (final track in extraTracks) ...[
+                    for (final track in activeTracks) ...[
                       const SizedBox(height: 18),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: _soundRow(
-                              icon: Icons.waves_rounded,
+                              icon: track.id == 'rain'
+                                  ? Icons.water_drop_rounded
+                                  : Icons.waves_rounded,
                               name: track.name,
                               value: track.volume,
-                              onChanged: (value) async {
-                                setState(() {
-                                  track.volume = value;
-                                });
-
-                                await _audioService.setVolume(track.id, value);
+                              onChanged: (value) {
+                                _setTrackVolume(track, value);
                               },
                             ),
                           ),
@@ -507,7 +497,7 @@ class _MixerScreenState extends State<MixerScreen> {
                                 builder: (_) => SoundLibraryScreen(
                                   activeSounds: {
                                     'Rain',
-                                    ...extraTracks.map((track) => track.name),
+                                    ...activeTracks.map((track) => track.name),
                                   },
                                 ),
                               ),
