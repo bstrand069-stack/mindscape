@@ -217,11 +217,16 @@ class _MixerScreenState extends State<MixerScreen> {
   }
 
   Future<void> _addSound(String name) async {
-    if (name == 'Rain') {
-      return;
-    }
-
     final soundMap = <String, SoundTrack>{
+      'Rain': SoundTrack(
+        id: 'rain',
+        name: 'Rain',
+        assetPath: 'assets/audio/nature/rain.mp3',
+        category: SoundCategory.nature,
+        volume: 0.30,
+        enabled: true,
+      ),
+
       'Ocean': SoundTrack(
         id: 'ocean',
         name: 'Ocean',
@@ -495,10 +500,9 @@ class _MixerScreenState extends State<MixerScreen> {
                             .push<String>(
                               MaterialPageRoute(
                                 builder: (_) => SoundLibraryScreen(
-                                  activeSounds: {
-                                    'Rain',
-                                    ...activeTracks.map((track) => track.name),
-                                  },
+                                  activeSounds: activeTracks
+                                      .map((track) => track.name)
+                                      .toSet(),
                                 ),
                               ),
                             );
