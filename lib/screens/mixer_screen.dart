@@ -280,16 +280,16 @@ class _MixerScreenState extends State<MixerScreen> {
         volume: 0.25,
         enabled: true,
       ),
-    
-    'Night': SoundTrack(
-  id: 'night',
-  name: 'Night',
-  assetPath: 'assets/audio/nature/night.mp3',
-  category: SoundCategory.nature,
-  volume: 0.25,
-  enabled: true,
-),
-};
+
+      'Night': SoundTrack(
+        id: 'night',
+        name: 'Night',
+        assetPath: 'assets/audio/nature/night.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+    };
 
     final track = soundMap[name];
 
@@ -507,9 +507,18 @@ class _MixerScreenState extends State<MixerScreen> {
                         children: [
                           Expanded(
                             child: _soundRow(
-                              icon: track.id == 'rain'
-                                  ? Icons.water_drop_rounded
-                                  : Icons.waves_rounded,
+                              icon: switch (track.id) {
+                                'rain' => Icons.water_drop_rounded,
+                                'ocean' => Icons.waves_rounded,
+                                'forest' => Icons.forest_rounded,
+                                'thunder' => Icons.thunderstorm_rounded,
+                                'fireplace' =>
+                                  Icons.local_fire_department_rounded,
+                                'wind' => Icons.air_rounded,
+                                'stream' => Icons.water_rounded,
+                                'night' => Icons.nightlight_round,
+                                _ => Icons.graphic_eq_rounded,
+                              },
                               name: track.name,
                               value: track.volume,
                               onChanged: (value) {
