@@ -564,21 +564,25 @@ class _MixerScreenState extends State<MixerScreen> {
                         ChoiceChip(
                           label: const Text('No Timer'),
                           selected: sessionMinutes == null,
-                          onSelected: (_) {
-                            setState(() {
-                              sessionMinutes = null;
-                            });
-                          },
+                          onSelected: playing || sessionTimerPaused
+                              ? null
+                              : (_) {
+                                  setState(() {
+                                    sessionMinutes = null;
+                                  });
+                                },
                         ),
                         for (final minutes in [15, 30, 45, 60])
                           ChoiceChip(
                             label: Text('$minutes min'),
                             selected: sessionMinutes == minutes,
-                            onSelected: (_) {
-                              setState(() {
-                                sessionMinutes = minutes;
-                              });
-                            },
+                            onSelected: playing || sessionTimerPaused
+                                ? null
+                                : (_) {
+                                    setState(() {
+                                      sessionMinutes = minutes;
+                                    });
+                                  },
                           ),
                       ],
                     ),
