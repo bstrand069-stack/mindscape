@@ -31,6 +31,7 @@ class _MixerScreenState extends State<MixerScreen> {
   double carrierPitch = 200;
   double toneVolume = 0.15;
   double beatHz = 6.0;
+  double masterVolume = 1.0;
 
   @override
   void initState() {
@@ -155,7 +156,7 @@ class _MixerScreenState extends State<MixerScreen> {
       track.volume = value;
     });
 
-    await _audioService.setVolume(track.id, value);
+    await _audioService.setVolume(track.id, value * masterVolume);
   }
 
   Future<void> _setToneVolume(double value) async {
@@ -163,7 +164,7 @@ class _MixerScreenState extends State<MixerScreen> {
       toneVolume = value;
     });
 
-    await _tonePlayer.setVolume(value);
+    await _tonePlayer.setVolume(value * masterVolume);
   }
 
   Future<void> _changeToneType(String value) async {
@@ -336,6 +337,18 @@ class _MixerScreenState extends State<MixerScreen> {
     }
   }
 
+  Future<void> _setMasterVolume(double value) async {
+    setState(() {
+      masterVolume = value;
+    });
+
+    for (final track in activeTracks) {
+      await _audioService.setVolume(track.id, track.volume * masterVolume);
+    }
+
+    await _tonePlayer.setVolume(toneVolume * masterVolume);
+  }
+
   @override
   void dispose() {
     _audioService.dispose();
@@ -500,6 +513,27 @@ class _MixerScreenState extends State<MixerScreen> {
                 title: 'Soundscape',
                 child: Column(
                   children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Master Volume',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          '${(masterVolume * 100).round()}%',
+                          style: const TextStyle(
+                            color: Color(0xFF82E5D4),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    Slider(value: masterVolume, onChanged: _setMasterVolume),
+
+                    const SizedBox(height: 18),
+
                     for (final track in activeTracks) ...[
                       const SizedBox(height: 18),
                       Row(
