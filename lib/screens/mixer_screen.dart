@@ -463,6 +463,25 @@ class _MixerScreenState extends State<MixerScreen> {
     });
   }
 
+  Future<void> _resetSession() async {
+    sessionTimer?.cancel();
+
+    for (final track in activeTracks) {
+      await _audioService.pauseTrack(track.id);
+    }
+
+    await _tonePlayer.pause();
+
+    if (!mounted) return;
+
+    setState(() {
+      playing = false;
+      sessionTimerPaused = false;
+      remainingSeconds = 0;
+      sessionMinutes = null;
+    });
+  }
+
   Future<void> _fadeOutSession() async {
     const steps = 20;
     const stepDelay = Duration(milliseconds: 150);
@@ -819,6 +838,12 @@ class _MixerScreenState extends State<MixerScreen> {
                     ),
                   ),
                 ),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: _resetSession,
+                icon: const Icon(Icons.restart_alt),
+                label: const Text('Reset Session'),
               ),
             ],
           ),
