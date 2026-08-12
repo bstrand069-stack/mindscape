@@ -521,6 +521,19 @@ class _MixerScreenState extends State<MixerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      playing
+                          ? 'Session Playing'
+                          : sessionTimerPaused
+                          ? 'Session Paused'
+                          : 'Ready',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF82E5D4),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     if (remainingSeconds == 0 && sessionMinutes != null) ...[
                       Text(
                         'Selected: $sessionMinutes min',
