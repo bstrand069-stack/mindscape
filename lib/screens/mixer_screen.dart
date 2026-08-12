@@ -1,7 +1,8 @@
-import 'sound_library_screen.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-
+import 'sound_library_screen.dart';
 import '../models/sound_track.dart';
 import '../services/audio_service.dart';
 import '../services/tone_generator.dart';
@@ -32,6 +33,12 @@ class _MixerScreenState extends State<MixerScreen> {
   double toneVolume = 0.15;
   double beatHz = 6.0;
   double masterVolume = 1.0;
+
+  int? sessionMinutes;
+
+  Timer? sessionTimer;
+
+  int remainingSeconds = 0;
 
   @override
   void initState() {
@@ -117,12 +124,55 @@ class _MixerScreenState extends State<MixerScreen> {
     });
   }
 
+  void _startSessionTimer() {
+    sessionTimer?.cancel();
+
+    if (sessionMinutes == null) {
+      setState(() {
+        remainingSeconds = 0;
+      });
+      return;
+    }
+
+    setState(() {
+      remainingSeconds = sessionMinutes! * 60;
+    });
+
+    sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (remainingSeconds <= 1) {
+        timer.cancel();
+
+        for (final track in activeTracks) {
+          await _audioService.pauseTrack(track.id);
+        }
+
+        await _tonePlayer.pause();
+
+        if (!mounted) return;
+
+        setState(() {
+          remainingSeconds = 0;
+          playing = false;
+        });
+
+        return;
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        remainingSeconds--;
+      });
+    });
+  }
+
   Future<void> _togglePlayback() async {
     if (loading || audioError != null || toneUpdating) {
       return;
     }
 
     if (playing) {
+      sessionTimer?.cancel();
       for (final track in activeTracks) {
         await _audioService.pauseTrack(track.id);
       }
@@ -147,6 +197,8 @@ class _MixerScreenState extends State<MixerScreen> {
 
       setState(() {
         playing = true;
+
+        _startSessionTimer();
       });
     }
   }
@@ -351,6 +403,7 @@ class _MixerScreenState extends State<MixerScreen> {
 
   @override
   void dispose() {
+    sessionTimer?.cancel();
     _audioService.dispose();
     _tonePlayer.dispose();
     super.dispose();
@@ -380,6 +433,52 @@ class _MixerScreenState extends State<MixerScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              _sectionCard(
+                title: 'Session Timer',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (remainingSeconds > 0) ...[
+                      Text(
+                        '${(remainingSeconds ~/ 60).toString().padLeft(2, '0')}:'
+                        '${(remainingSeconds % 60).toString().padLeft(2, '0')}',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF82E5D4),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('No Timer'),
+                          selected: sessionMinutes == null,
+                          onSelected: (_) {
+                            setState(() {
+                              sessionMinutes = null;
+                            });
+                          },
+                        ),
+                        for (final minutes in [15, 30, 45, 60])
+                          ChoiceChip(
+                            label: Text('$minutes min'),
+                            selected: sessionMinutes == minutes,
+                            onSelected: (_) {
+                              setState(() {
+                                sessionMinutes = minutes;
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
               _sectionCard(
                 title: 'Brainwave Tone',
                 child: Column(
