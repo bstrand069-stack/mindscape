@@ -36,6 +36,8 @@ class _MixerScreenState extends State<MixerScreen> {
 
   int? sessionMinutes;
 
+  bool sessionTimerPaused = false;
+
   Timer? sessionTimer;
 
   int remainingSeconds = 0;
@@ -167,6 +169,40 @@ class _MixerScreenState extends State<MixerScreen> {
     });
   }
 
+  void _resumeSessionTimer() {
+    sessionTimer?.cancel();
+
+    sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (remainingSeconds <= 1) {
+        timer.cancel();
+
+        await _fadeOutSession();
+
+        for (final track in activeTracks) {
+          await _audioService.pauseTrack(track.id);
+        }
+
+        await _tonePlayer.pause();
+
+        if (!mounted) return;
+
+        setState(() {
+          remainingSeconds = 0;
+          playing = false;
+          sessionTimerPaused = false;
+        });
+
+        return;
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        remainingSeconds--;
+      });
+    });
+  }
+
   Future<void> _togglePlayback() async {
     if (loading || audioError != null || toneUpdating) {
       return;
@@ -174,6 +210,7 @@ class _MixerScreenState extends State<MixerScreen> {
 
     if (playing) {
       sessionTimer?.cancel();
+      sessionTimerPaused = true;
       for (final track in activeTracks) {
         await _audioService.pauseTrack(track.id);
       }
@@ -199,7 +236,13 @@ class _MixerScreenState extends State<MixerScreen> {
       setState(() {
         playing = true;
 
-        _startSessionTimer();
+        if (sessionTimerPaused && remainingSeconds > 0) {
+          sessionTimerPaused = false;
+          _resumeSessionTimer();
+        } else {
+          sessionTimerPaused = false;
+          _startSessionTimer();
+        }
       });
     }
   }
