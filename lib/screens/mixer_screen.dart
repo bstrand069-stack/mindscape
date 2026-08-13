@@ -225,8 +225,7 @@ class _MixerScreenState extends State<MixerScreen> {
         playing = false;
       });
     } else {
-      await _fadeInSession();
-
+      
       for (final track in activeTracks) {
         _audioService.playTrack(track.id);
       }
@@ -234,6 +233,8 @@ class _MixerScreenState extends State<MixerScreen> {
       if (toneType != 'None') {
         _tonePlayer.play();
       }
+
+      await _fadeInSession();
 
       if (!mounted) return;
 
