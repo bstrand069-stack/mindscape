@@ -223,6 +223,8 @@ class _MixerScreenState extends State<MixerScreen> {
         playing = false;
       });
     } else {
+      await _fadeInSession();
+      
       for (final track in activeTracks) {
         _audioService.playTrack(track.id);
       }
@@ -244,6 +246,26 @@ class _MixerScreenState extends State<MixerScreen> {
           _startSessionTimer();
         }
       });
+    }
+  }
+
+  Future<void> _fadeInSession() async {
+    const steps = 20;
+    const stepDelay = Duration(milliseconds: 150);
+
+    for (int i = 0; i <= steps; i++) {
+      final fade = i / steps;
+
+      for (final track in activeTracks) {
+        await _audioService.setVolume(
+          track.id,
+          track.volume * masterVolume * fade,
+        );
+      }
+
+      await _tonePlayer.setVolume(toneVolume * masterVolume * fade);
+
+      await Future.delayed(stepDelay);
     }
   }
 
