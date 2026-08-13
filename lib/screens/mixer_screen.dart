@@ -211,6 +211,8 @@ class _MixerScreenState extends State<MixerScreen> {
     if (playing) {
       sessionTimer?.cancel();
       sessionTimerPaused = true;
+
+      await _fadeOutForPause();
       for (final track in activeTracks) {
         await _audioService.pauseTrack(track.id);
       }
@@ -224,7 +226,7 @@ class _MixerScreenState extends State<MixerScreen> {
       });
     } else {
       await _fadeInSession();
-      
+
       for (final track in activeTracks) {
         _audioService.playTrack(track.id);
       }
@@ -254,6 +256,26 @@ class _MixerScreenState extends State<MixerScreen> {
     const stepDelay = Duration(milliseconds: 150);
 
     for (int i = 0; i <= steps; i++) {
+      final fade = i / steps;
+
+      for (final track in activeTracks) {
+        await _audioService.setVolume(
+          track.id,
+          track.volume * masterVolume * fade,
+        );
+      }
+
+      await _tonePlayer.setVolume(toneVolume * masterVolume * fade);
+
+      await Future.delayed(stepDelay);
+    }
+  }
+
+  Future<void> _fadeOutForPause() async {
+    const steps = 20;
+    const stepDelay = Duration(milliseconds: 100);
+
+    for (int i = steps; i >= 0; i--) {
       final fade = i / steps;
 
       for (final track in activeTracks) {
