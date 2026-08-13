@@ -141,7 +141,7 @@ class _MixerScreenState extends State<MixerScreen> {
     });
 
     sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      if (remainingSeconds <= 1) {
+      if (remainingSeconds <= 0) {
         timer.cancel();
         await _fadeOutSession();
 
@@ -164,7 +164,7 @@ class _MixerScreenState extends State<MixerScreen> {
       if (!mounted) return;
 
       setState(() {
-        remainingSeconds--;
+        remainingSeconds = (remainingSeconds - 1).clamp(0, 999999);
       });
     });
   }
@@ -173,7 +173,7 @@ class _MixerScreenState extends State<MixerScreen> {
     sessionTimer?.cancel();
 
     sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      if (remainingSeconds <= 1) {
+      if (remainingSeconds <= 0) {
         timer.cancel();
 
         await _fadeOutSession();
@@ -545,7 +545,8 @@ class _MixerScreenState extends State<MixerScreen> {
                       ),
                       const SizedBox(height: 12),
                     ],
-                    if (remainingSeconds > 0) ...[
+                    if (sessionMinutes != null &&
+                        (playing || sessionTimerPaused)) ...[
                       Text(
                         '${(remainingSeconds ~/ 60).toString().padLeft(2, '0')}:'
                         '${(remainingSeconds % 60).toString().padLeft(2, '0')}',
