@@ -852,13 +852,21 @@ class _MixerScreenState extends State<MixerScreen> {
                       ),
                     ],
 
-                    _soundRow(
-                      icon: Icons.graphic_eq_rounded,
-                      name: toneType == 'None'
-                          ? 'Tone Off'
-                          : '$currentBrainwave $toneType',
-                      value: toneVolume,
-                      onChanged: _setToneVolume,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _soundRow(
+                            icon: Icons.graphic_eq_rounded,
+                            name: toneType == 'None'
+                                ? 'Tone Off'
+                                : '$currentBrainwave $toneType',
+                            value: toneVolume,
+                            onChanged: _setToneVolume,
+                          ),
+                        ),
+                        const SizedBox(width: 57),
+                      ],
                     ),
 
                     const SizedBox(height: 14),
