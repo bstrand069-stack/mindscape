@@ -227,9 +227,7 @@ class _MixerScreenState extends State<MixerScreen> {
         playing = true;
         sessionMessage = null;
       });
-    } 
-    
-    else {
+    } else {
       for (final track in activeTracks) {
         _audioService.playTrack(track.id);
       }
@@ -529,6 +527,7 @@ class _MixerScreenState extends State<MixerScreen> {
       sessionTimerPaused = false;
       remainingSeconds = 0;
       sessionMinutes = null;
+      sessionMessage = null;
     });
   }
 
@@ -786,19 +785,24 @@ class _MixerScreenState extends State<MixerScreen> {
                 child: Column(
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
                           'Master Volume',
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
-                        Text(
-                          '${(masterVolume * 100).round()}%',
-                          style: const TextStyle(
-                            color: Color(0xFF82E5D4),
-                            fontWeight: FontWeight.w700,
+                        const Spacer(),
+                        SizedBox(
+                          width: 48,
+                          child: Text(
+                            '${(masterVolume * 100).round()}%',
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(
+                              color: Color(0xFF82E5D4),
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
+                        const SizedBox(width: 54),
                       ],
                     ),
 
@@ -1000,9 +1004,16 @@ class _MixerScreenState extends State<MixerScreen> {
                 ),
               ),
             ),
-            Text(
-              '${(value * 100).round()}%',
-              style: const TextStyle(color: Color(0xFF82E5D4)),
+            SizedBox(
+              width: 48,
+              child: Text(
+                '${(value * 100).round()}%',
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  color: Color(0xFF82E5D4),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
