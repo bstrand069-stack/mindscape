@@ -225,7 +225,7 @@ class _MixerScreenState extends State<MixerScreen> {
       if (!mounted) return;
 
       setState(() {
-        playing = true;
+        playing = false;
         sessionMessage = null;
       });
     } else {
@@ -630,14 +630,29 @@ class _MixerScreenState extends State<MixerScreen> {
 
               const SizedBox(height: 16),
 
-              _sectionCard(
-                title: 'Session Timer',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (sessionMessage != null) ...[
+              if (sessionMinutes == -1)
+                _sectionCard(
+                  title: 'Session Timer',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (sessionMessage != null) ...[
+                        Text(
+                          sessionMessage!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF82E5D4),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       Text(
-                        sessionMessage!,
+                        playing
+                            ? 'Session Playing'
+                            : sessionTimerPaused
+                            ? 'Session Paused'
+                            : 'Ready',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -645,76 +660,62 @@ class _MixerScreenState extends State<MixerScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                    ],
-                    Text(
-                      playing
-                          ? 'Session Playing'
-                          : sessionTimerPaused
-                          ? 'Session Paused'
-                          : 'Ready',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF82E5D4),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (remainingSeconds == 0 && sessionMinutes != null) ...[
-                      Text(
-                        'Selected: $sessionMinutes min',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF82E5D4),
+                      if (remainingSeconds == 0 && sessionMinutes != null) ...[
+                        Text(
+                          'Selected: $sessionMinutes min',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF82E5D4),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                    if (sessionMinutes != null &&
-                        (playing || sessionTimerPaused)) ...[
-                      Text(
-                        '${(remainingSeconds ~/ 60).toString().padLeft(2, '0')}:'
-                        '${(remainingSeconds % 60).toString().padLeft(2, '0')}',
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF82E5D4),
+                        const SizedBox(height: 12),
+                      ],
+                      if (sessionMinutes != null &&
+                          (playing || sessionTimerPaused)) ...[
+                        Text(
+                          '${(remainingSeconds ~/ 60).toString().padLeft(2, '0')}:'
+                          '${(remainingSeconds % 60).toString().padLeft(2, '0')}',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF82E5D4),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        ChoiceChip(
-                          label: const Text('No Timer'),
-                          selected: sessionMinutes == null,
-                          onSelected: playing || sessionTimerPaused
-                              ? null
-                              : (_) {
-                                  setState(() {
-                                    sessionMinutes = null;
-                                  });
-                                },
-                        ),
-                        for (final minutes in [1, 15, 30, 45, 60])
+                        const SizedBox(height: 12),
+                      ],
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
                           ChoiceChip(
-                            label: Text('$minutes min'),
-                            selected: sessionMinutes == minutes,
+                            label: const Text('No Timer'),
+                            selected: sessionMinutes == null,
                             onSelected: playing || sessionTimerPaused
                                 ? null
                                 : (_) {
                                     setState(() {
-                                      sessionMinutes = minutes;
+                                      sessionMinutes = null;
                                     });
                                   },
                           ),
-                      ],
-                    ),
-                  ],
+                          for (final minutes in [1, 15, 30, 45, 60])
+                            ChoiceChip(
+                              label: Text('$minutes min'),
+                              selected: sessionMinutes == minutes,
+                              onSelected: playing || sessionTimerPaused
+                                  ? null
+                                  : (_) {
+                                      setState(() {
+                                        sessionMinutes = minutes;
+                                      });
+                                    },
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               const SizedBox(height: 18),
               if (showBinauralTab)
                 _sectionCard(
