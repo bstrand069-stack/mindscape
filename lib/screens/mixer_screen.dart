@@ -842,7 +842,11 @@ class _MixerScreenState extends State<MixerScreen> {
                             onPressed: () {
                               _removeExtraTrack(track);
                             },
-                            icon: const Icon(Icons.close_rounded),
+                            icon: const Icon(
+                              Icons.close_rounded,
+                              size: 20,
+                              color: Color(0xFF82E5D4),
+                            ),
                           ),
                         ],
                       ),
