@@ -24,6 +24,7 @@ class _MixerScreenState extends State<MixerScreen> {
   bool loading = true;
   bool playing = false;
   bool toneUpdating = false;
+  bool showBinauralTab = false;
   String? audioError;
 
   String toneType = 'Binaural';
@@ -554,10 +555,10 @@ class _MixerScreenState extends State<MixerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF061922),
+      backgroundColor: const Color(0xFF03131F),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('MindScape Mixer'),
+        title: const Text('Mixer'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -565,6 +566,70 @@ class _MixerScreenState extends State<MixerScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Create your perfect focus environment',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF8FA6B8)),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0D2233),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFF1F3A4D)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          setState(() {
+                            showBinauralTab = false;
+                          });
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: showBinauralTab
+                              ? Colors.transparent
+                              : const Color(0xFF1F8F78),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text('Sounds'),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          setState(() {
+                            showBinauralTab = true;
+                          });
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: showBinauralTab
+                              ? const Color(0xFF1F8F78)
+                              : Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text('Binaural Beats'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
               _sectionCard(
                 title: 'Session Timer',
                 child: Column(
@@ -651,249 +716,253 @@ class _MixerScreenState extends State<MixerScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              _sectionCard(
-                title: 'Brainwave Tone',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Tone Type',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        _choiceChip('Binaural'),
-                        _choiceChip('Isochronic'),
-                        _choiceChip('None'),
-                      ],
-                    ),
-                    const SizedBox(height: 22),
-                    const Text(
-                      'Brainwave',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _brainwaveChip('Delta'),
-                        _brainwaveChip('Theta'),
-                        _brainwaveChip('Alpha'),
-                        _brainwaveChip('Beta'),
-                        _brainwaveChip('Gamma'),
-                      ],
-                    ),
-                    const SizedBox(height: 22),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Beat Frequency',
-
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        Text(
-                          '${beatFrequency.toStringAsFixed(1)} Hz',
-                          style: const TextStyle(
-                            color: Color(0xFF82E5D4),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    Slider(
-                      min: 0.5,
-                      max: 40.0,
-                      divisions: 395,
-                      value: beatHz,
-                      onChanged: (value) {
-                        setState(() {
-                          beatHz = value;
-
-                          if (value < 4.0) {
-                            brainwave = 'Delta';
-                          } else if (value < 8.0) {
-                            brainwave = 'Theta';
-                          } else if (value < 12.0) {
-                            brainwave = 'Alpha';
-                          } else if (value < 30.0) {
-                            brainwave = 'Beta';
-                          } else {
-                            brainwave = 'Gamma';
-                          }
-                        });
-                      },
-                      onChangeEnd: (value) async {
-                        beatHz = value;
-                        await _generateTone();
-                      },
-                    ), // Slider
-
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Carrier Pitch',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        Text(
-                          '${carrierPitch.round()} Hz',
-                          style: const TextStyle(
-                            color: Color(0xFF82E5D4),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Slider(
-                      min: 100,
-                      max: 400,
-                      divisions: 30,
-                      value: carrierPitch,
-                      onChanged: _changeCarrierPitch,
-                      onChangeEnd: _finishCarrierPitchChange,
-                    ),
-                    if (toneUpdating)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 8),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                            SizedBox(width: 10),
-                            Text(
-                              'Updating tone...',
-                              style: TextStyle(color: Colors.white60),
-                            ),
-                          ],
-                        ),
+              if (showBinauralTab)
+                _sectionCard(
+                  title: 'Brainwave Tone',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Tone Type',
+                        style: TextStyle(fontWeight: FontWeight.w600),
                       ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-              _sectionCard(
-                title: 'Soundscape',
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Master Volume',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        const Spacer(),
-                        SizedBox(
-                          width: 48,
-                          child: Text(
-                            '${(masterVolume * 100).round()}%',
-                            textAlign: TextAlign.right,
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          _choiceChip('Binaural'),
+                          _choiceChip('Isochronic'),
+                          _choiceChip('None'),
+                        ],
+                      ),
+                      const SizedBox(height: 22),
+                      const Text(
+                        'Brainwave',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _brainwaveChip('Delta'),
+                          _brainwaveChip('Theta'),
+                          _brainwaveChip('Alpha'),
+                          _brainwaveChip('Beta'),
+                          _brainwaveChip('Gamma'),
+                        ],
+                      ),
+                      const SizedBox(height: 22),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Beat Frequency',
+
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            '${beatFrequency.toStringAsFixed(1)} Hz',
                             style: const TextStyle(
                               color: Color(0xFF82E5D4),
                               fontWeight: FontWeight.w700,
                             ),
                           ),
+                        ],
+                      ),
+
+                      Slider(
+                        min: 0.5,
+                        max: 40.0,
+                        divisions: 395,
+                        value: beatHz,
+                        onChanged: (value) {
+                          setState(() {
+                            beatHz = value;
+
+                            if (value < 4.0) {
+                              brainwave = 'Delta';
+                            } else if (value < 8.0) {
+                              brainwave = 'Theta';
+                            } else if (value < 12.0) {
+                              brainwave = 'Alpha';
+                            } else if (value < 30.0) {
+                              brainwave = 'Beta';
+                            } else {
+                              brainwave = 'Gamma';
+                            }
+                          });
+                        },
+                        onChangeEnd: (value) async {
+                          beatHz = value;
+                          await _generateTone();
+                        },
+                      ), // Slider
+
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Carrier Pitch',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            '${carrierPitch.round()} Hz',
+                            style: const TextStyle(
+                              color: Color(0xFF82E5D4),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Slider(
+                        min: 100,
+                        max: 400,
+                        divisions: 30,
+                        value: carrierPitch,
+                        onChanged: _changeCarrierPitch,
+                        onChangeEnd: _finishCarrierPitchChange,
+                      ),
+                      if (toneUpdating)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                'Updating tone...',
+                                style: TextStyle(color: Colors.white60),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 54),
-                      ],
-                    ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 18),
+              if (!showBinauralTab)
+                _sectionCard(
+                  title: 'Soundscape',
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Text(
+                            'Master Volume',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          const Spacer(),
+                          SizedBox(
+                            width: 48,
+                            child: Text(
+                              '${(masterVolume * 100).round()}%',
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                color: Color(0xFF82E5D4),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 54),
+                        ],
+                      ),
 
-                    Slider(value: masterVolume, onChanged: _setMasterVolume),
+                      Slider(value: masterVolume, onChanged: _setMasterVolume),
 
-                    const SizedBox(height: 18),
-
-                    for (final track in activeTracks) ...[
                       const SizedBox(height: 18),
+
+                      for (final track in activeTracks) ...[
+                        const SizedBox(height: 18),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _soundRow(
+                                icon: switch (track.id) {
+                                  'rain' => Icons.water_drop_rounded,
+                                  'ocean' => Icons.waves_rounded,
+                                  'forest' => Icons.forest_rounded,
+                                  'thunder' => Icons.thunderstorm_rounded,
+                                  'fireplace' =>
+                                    Icons.local_fire_department_rounded,
+                                  'wind' => Icons.air_rounded,
+                                  'stream' => Icons.water_rounded,
+                                  'night' => Icons.nightlight_round,
+                                  _ => Icons.graphic_eq_rounded,
+                                },
+                                name: track.name,
+                                value: track.volume,
+                                onChanged: (value) {
+                                  _setTrackVolume(track, value);
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              tooltip: 'Remove ${track.name}',
+                              onPressed: () {
+                                _removeExtraTrack(track);
+                              },
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                size: 20,
+                                color: Color(0xFF82E5D4),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: _soundRow(
-                              icon: switch (track.id) {
-                                'rain' => Icons.water_drop_rounded,
-                                'ocean' => Icons.waves_rounded,
-                                'forest' => Icons.forest_rounded,
-                                'thunder' => Icons.thunderstorm_rounded,
-                                'fireplace' =>
-                                  Icons.local_fire_department_rounded,
-                                'wind' => Icons.air_rounded,
-                                'stream' => Icons.water_rounded,
-                                'night' => Icons.nightlight_round,
-                                _ => Icons.graphic_eq_rounded,
-                              },
-                              name: track.name,
-                              value: track.volume,
-                              onChanged: (value) {
-                                _setTrackVolume(track, value);
-                              },
+                              icon: Icons.graphic_eq_rounded,
+                              name: toneType == 'None'
+                                  ? 'Tone Off'
+                                  : '$currentBrainwave $toneType',
+                              value: toneVolume,
+                              onChanged: _setToneVolume,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            tooltip: 'Remove ${track.name}',
-                            onPressed: () {
-                              _removeExtraTrack(track);
-                            },
-                            icon: const Icon(
-                              Icons.close_rounded,
-                              size: 20,
-                              color: Color(0xFF82E5D4),
-                            ),
-                          ),
+                          const SizedBox(width: 57),
                         ],
                       ),
-                    ],
 
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: _soundRow(
-                            icon: Icons.graphic_eq_rounded,
-                            name: toneType == 'None'
-                                ? 'Tone Off'
-                                : '$currentBrainwave $toneType',
-                            value: toneVolume,
-                            onChanged: _setToneVolume,
-                          ),
-                        ),
-                        const SizedBox(width: 57),
-                      ],
-                    ),
-
-                    const SizedBox(height: 14),
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        final selectedSound = await Navigator.of(context)
-                            .push<String>(
-                              MaterialPageRoute(
-                                builder: (_) => SoundLibraryScreen(
-                                  activeSounds: activeTracks
-                                      .map((track) => track.name)
-                                      .toSet(),
+                      const SizedBox(height: 14),
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final selectedSound = await Navigator.of(context)
+                              .push<String>(
+                                MaterialPageRoute(
+                                  builder: (_) => SoundLibraryScreen(
+                                    activeSounds: activeTracks
+                                        .map((track) => track.name)
+                                        .toSet(),
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
 
-                        if (selectedSound == null) return;
-                        if (!context.mounted) return;
+                          if (selectedSound == null) return;
+                          if (!context.mounted) return;
 
-                        await _addSound(selectedSound);
-                      },
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Sound'),
-                    ),
-                  ],
-                ), // Column
-              ), // _sectionCard
+                          await _addSound(selectedSound);
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Sound'),
+                      ),
+                    ],
+                  ), // Column
+                ), // _sectionCard
               const SizedBox(height: 18),
               if (loading)
                 const Center(
@@ -951,9 +1020,9 @@ class _MixerScreenState extends State<MixerScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: const Color(0xFF0D2233),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: const Color(0xFF1F3A4D)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
