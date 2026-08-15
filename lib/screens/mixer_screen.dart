@@ -736,7 +736,7 @@ class _MixerScreenState extends State<MixerScreen> {
                           _choiceChip('None'),
                         ],
                       ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 18),
                       const Text(
                         'Brainwave',
                         style: TextStyle(fontWeight: FontWeight.w600),
@@ -753,7 +753,7 @@ class _MixerScreenState extends State<MixerScreen> {
                           _brainwaveChip('Gamma'),
                         ],
                       ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 18),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -800,7 +800,7 @@ class _MixerScreenState extends State<MixerScreen> {
                         },
                       ), // Slider
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -985,7 +985,7 @@ class _MixerScreenState extends State<MixerScreen> {
                     ],
                   ), // Column
                 ), // _sectionCard
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               if (loading)
                 const Center(
                   child: Padding(
