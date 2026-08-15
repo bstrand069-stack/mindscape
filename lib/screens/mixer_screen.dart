@@ -579,7 +579,7 @@ class _MixerScreenState extends State<MixerScreen> {
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0D2233),
+                  color: const Color(0xFF0A1D2B),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: const Color(0xFF29485C)),
                 ),
@@ -628,7 +628,7 @@ class _MixerScreenState extends State<MixerScreen> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 6),
 
               if (sessionMinutes == -1)
                 _sectionCard(
@@ -820,7 +820,6 @@ class _MixerScreenState extends State<MixerScreen> {
                       Slider(
                         min: 100,
                         max: 400,
-                        divisions: 30,
                         value: carrierPitch,
                         onChanged: _changeCarrierPitch,
                         onChangeEnd: _finishCarrierPitchChange,
@@ -848,7 +847,7 @@ class _MixerScreenState extends State<MixerScreen> {
                     ],
                   ),
                 ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
               if (!showBinauralTab)
                 _sectionCard(
                   title: 'Soundscape',
@@ -858,7 +857,10 @@ class _MixerScreenState extends State<MixerScreen> {
                         children: [
                           const Text(
                             'Master Volume',
-                            style: TextStyle(fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           const Spacer(),
                           SizedBox(
@@ -907,24 +909,16 @@ class _MixerScreenState extends State<MixerScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            PopupMenuButton<String>(
-                              tooltip: 'Sound options',
-                              icon: const Icon(
-                                Icons.more_horiz,
-                                size: 20,
-                                color: Color(0xFF8FA6B8),
-                              ),
-                              onSelected: (value) {
-                                if (value == 'remove') {
-                                  _removeExtraTrack(track);
-                                }
+                            IconButton(
+                              tooltip: 'Remove ${track.name}',
+                              onPressed: () {
+                                _removeExtraTrack(track);
                               },
-                              itemBuilder: (context) => const [
-                                PopupMenuItem<String>(
-                                  value: 'remove',
-                                  child: Text('Remove Sound'),
-                                ),
-                              ],
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                size: 20,
+                                color: Color(0xFF82E5D4),
+                              ),
                             ),
                           ],
                         ),
@@ -984,14 +978,14 @@ class _MixerScreenState extends State<MixerScreen> {
                           'Add Sound',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
                     ],
                   ), // Column
                 ), // _sectionCard
-              const SizedBox(height: 18),
+              const SizedBox(height: 8),
               if (loading)
                 const Center(
                   child: Padding(
@@ -1053,7 +1047,15 @@ class _MixerScreenState extends State<MixerScreen> {
                 onPressed: _resetSession,
                 icon: const Icon(Icons.restart_alt),
                 label: const Text('Reset Session'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF82E5D4),
+                  side: const BorderSide(color: Color(0xFF526B78), width: 1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                ),
               ),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -1067,16 +1069,16 @@ class _MixerScreenState extends State<MixerScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF10283A),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF29465A)),
+        border: Border.all(color: const Color(0xFF254254)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+            style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           child,
         ],
       ),
@@ -1089,6 +1091,8 @@ class _MixerScreenState extends State<MixerScreen> {
     return ChoiceChip(
       label: Text(label),
       selected: selected,
+      selectedColor: const Color(0xFF249B84),
+      backgroundColor: const Color(0xFF0D2233),
       onSelected: (_) {
         _changeToneType(label);
       },
@@ -1101,6 +1105,8 @@ class _MixerScreenState extends State<MixerScreen> {
     return ChoiceChip(
       label: Text(label),
       selected: selected,
+      selectedColor: const Color(0xFF249B84),
+      backgroundColor: const Color(0xFF0D2233),
       onSelected: toneType == 'None'
           ? null
           : (_) {
@@ -1126,7 +1132,7 @@ class _MixerScreenState extends State<MixerScreen> {
               child: Text(
                 name,
                 style: const TextStyle(
-                  fontSize: 17,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1137,6 +1143,7 @@ class _MixerScreenState extends State<MixerScreen> {
                 '${(value * 100).round()}%',
                 textAlign: TextAlign.right,
                 style: const TextStyle(
+                  fontSize: 14,
                   color: Color(0xFF82E5D4),
                   fontWeight: FontWeight.w600,
                 ),
