@@ -581,7 +581,7 @@ class _MixerScreenState extends State<MixerScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF0D2233),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFF1F3A4D)),
+                  border: Border.all(color: const Color(0xFF29485C)),
                 ),
                 child: Row(
                   children: [
@@ -930,48 +930,67 @@ class _MixerScreenState extends State<MixerScreen> {
                         ),
                       ],
 
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _soundRow(
-                                icon: Icons.graphic_eq_rounded,
-                                name: toneType == 'None'
-                                    ? 'Tone Off'
-                                    : '$currentBrainwave $toneType',
-                                value: toneVolume,
-                                onChanged: _setToneVolume,
-                              ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _soundRow(
+                              icon: Icons.graphic_eq_rounded,
+                              name: toneType == 'None'
+                                  ? 'Tone Off'
+                                  : '$currentBrainwave $toneType',
+                              value: toneVolume,
+                              onChanged: _setToneVolume,
                             ),
-                            const SizedBox(width: 57),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 57),
+                        ],
+                      ),
 
-                        const SizedBox(height: 14),
-                        OutlinedButton.icon(
-                          onPressed: () async {
-                            final selectedSound = await Navigator.of(context)
-                                .push<String>(
-                                  MaterialPageRoute(
-                                    builder: (_) => SoundLibraryScreen(
-                                      activeSounds: activeTracks
-                                          .map((track) => track.name)
-                                          .toSet(),
-                                    ),
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final selectedSound = await Navigator.of(context)
+                              .push<String>(
+                                MaterialPageRoute(
+                                  builder: (_) => SoundLibraryScreen(
+                                    activeSounds: activeTracks
+                                        .map((track) => track.name)
+                                        .toSet(),
                                   ),
-                                );
+                                ),
+                              );
 
-                            if (selectedSound == null) return;
-                            if (!context.mounted) return;
+                          if (selectedSound == null) return;
+                          if (!context.mounted) return;
 
-                            await _addSound(selectedSound);
-                          },
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add Sound'),
+                          await _addSound(selectedSound);
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF82E5D4),
+                          side: const BorderSide(
+                            color: Color(0xFF8FA6B8),
+                            width: 1,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
                         ),
-                      ],
+                        icon: const Icon(Icons.add, size: 22),
+                        label: const Text(
+                          'Add Sound',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ), // Column
-                  ), // _sectionCard
+                ), // _sectionCard
               const SizedBox(height: 18),
               if (loading)
                 const Center(
@@ -989,25 +1008,42 @@ class _MixerScreenState extends State<MixerScreen> {
               const SizedBox(height: 10),
               SizedBox(
                 height: 62,
-                child: FilledButton.icon(
-                  onPressed: loading || audioError != null || toneUpdating
-                      ? null
-                      : _togglePlayback,
-                  icon: Icon(
-                    playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  ),
-                  label: Text(
-                    playing ? 'Pause Session' : 'Begin Session',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Color(0xFF75D98B),
+                        Color(0xFF65D4B1),
+                        Color(0xFF58AFCB),
+                        Color(0xFF7567C7),
+                      ],
+                      stops: [0.0, 0.32, 0.66, 1.0],
                     ),
+                    borderRadius: BorderRadius.circular(18),
                   ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF78DCC8),
-                    foregroundColor: const Color(0xFF05201D),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
+                  child: FilledButton.icon(
+                    onPressed: loading || audioError != null || toneUpdating
+                        ? null
+                        : _togglePlayback,
+                    icon: Icon(
+                      playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    ),
+                    label: Text(
+                      playing ? 'Pause Session' : 'Begin Session',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: const Color(0xFF05201D),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
                     ),
                   ),
                 ),
@@ -1029,9 +1065,9 @@ class _MixerScreenState extends State<MixerScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D2233),
+        color: const Color(0xFF10283A),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF1F3A4D)),
+        border: Border.all(color: const Color(0xFF29465A)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
