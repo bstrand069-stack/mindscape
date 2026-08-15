@@ -881,7 +881,7 @@ class _MixerScreenState extends State<MixerScreen> {
                       const SizedBox(height: 18),
 
                       for (final track in activeTracks) ...[
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 10),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -907,63 +907,71 @@ class _MixerScreenState extends State<MixerScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            IconButton(
-                              tooltip: 'Remove ${track.name}',
-                              onPressed: () {
-                                _removeExtraTrack(track);
-                              },
+                            PopupMenuButton<String>(
+                              tooltip: 'Sound options',
                               icon: const Icon(
-                                Icons.close_rounded,
+                                Icons.more_horiz,
                                 size: 20,
-                                color: Color(0xFF82E5D4),
+                                color: Color(0xFF8FA6B8),
                               ),
+                              onSelected: (value) {
+                                if (value == 'remove') {
+                                  _removeExtraTrack(track);
+                                }
+                              },
+                              itemBuilder: (context) => const [
+                                PopupMenuItem<String>(
+                                  value: 'remove',
+                                  child: Text('Remove Sound'),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ],
 
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _soundRow(
-                              icon: Icons.graphic_eq_rounded,
-                              name: toneType == 'None'
-                                  ? 'Tone Off'
-                                  : '$currentBrainwave $toneType',
-                              value: toneVolume,
-                              onChanged: _setToneVolume,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _soundRow(
+                                icon: Icons.graphic_eq_rounded,
+                                name: toneType == 'None'
+                                    ? 'Tone Off'
+                                    : '$currentBrainwave $toneType',
+                                value: toneVolume,
+                                onChanged: _setToneVolume,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 57),
-                        ],
-                      ),
+                            const SizedBox(width: 57),
+                          ],
+                        ),
 
-                      const SizedBox(height: 14),
-                      OutlinedButton.icon(
-                        onPressed: () async {
-                          final selectedSound = await Navigator.of(context)
-                              .push<String>(
-                                MaterialPageRoute(
-                                  builder: (_) => SoundLibraryScreen(
-                                    activeSounds: activeTracks
-                                        .map((track) => track.name)
-                                        .toSet(),
+                        const SizedBox(height: 14),
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            final selectedSound = await Navigator.of(context)
+                                .push<String>(
+                                  MaterialPageRoute(
+                                    builder: (_) => SoundLibraryScreen(
+                                      activeSounds: activeTracks
+                                          .map((track) => track.name)
+                                          .toSet(),
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
 
-                          if (selectedSound == null) return;
-                          if (!context.mounted) return;
+                            if (selectedSound == null) return;
+                            if (!context.mounted) return;
 
-                          await _addSound(selectedSound);
-                        },
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add Sound'),
-                      ),
-                    ],
+                            await _addSound(selectedSound);
+                          },
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add Sound'),
+                        ),
+                      ],
                   ), // Column
-                ), // _sectionCard
+                  ), // _sectionCard
               const SizedBox(height: 18),
               if (loading)
                 const Center(
@@ -1072,6 +1080,7 @@ class _MixerScreenState extends State<MixerScreen> {
     required ValueChanged<double> onChanged,
   }) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
@@ -1099,7 +1108,16 @@ class _MixerScreenState extends State<MixerScreen> {
             ),
           ],
         ),
-        Slider(value: value, onChanged: onChanged),
+        SizedBox(
+          width: 240,
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 2,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+            ),
+            child: Slider(value: value, onChanged: onChanged),
+          ),
+        ),
       ],
     );
   }
