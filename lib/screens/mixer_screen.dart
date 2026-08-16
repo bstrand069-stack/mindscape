@@ -435,6 +435,78 @@ class _MixerScreenState extends State<MixerScreen> {
         volume: 0.25,
         enabled: true,
       ),
+
+      'Singing Bowls': SoundTrack(
+        id: 'singing_bowls',
+        name: 'Singing Bowls',
+        assetPath: 'assets/audio/meditation/singing_bowls.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+
+      'Chimes': SoundTrack(
+        id: 'chimes',
+        name: 'Chimes',
+        assetPath: 'assets/audio/meditation/chimes.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+
+      'Temple Bells': SoundTrack(
+        id: 'temple_bells',
+        name: 'Temple Bells',
+        assetPath: 'assets/audio/meditation/temple_bells.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+
+      'White Noise': SoundTrack(
+        id: 'white_noise',
+        name: 'White Noise',
+        assetPath: 'assets/audio/noise/white_noise.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+
+      'Pink Noise': SoundTrack(
+        id: 'pink_noise',
+        name: 'Pink Noise',
+        assetPath: 'assets/audio/noise/pink_noise.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+
+      'Brown Noise': SoundTrack(
+        id: 'brown_noise',
+        name: 'Brown Noise',
+        assetPath: 'assets/audio/noise/brown_noise.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+
+      'Green Noise': SoundTrack(
+        id: 'green_noise',
+        name: 'Green Noise',
+        assetPath: 'assets/audio/noise/green_noise.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+
+      'Blue Noise': SoundTrack(
+        id: 'blue_noise',
+        name: 'Blue Noise',
+        assetPath: 'assets/audio/noise/blue_noise.mp3',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
     };
 
     final track = soundMap[name];
