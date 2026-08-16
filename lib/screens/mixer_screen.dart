@@ -363,6 +363,8 @@ class _MixerScreenState extends State<MixerScreen> {
   }
 
   Future<void> _addSound(String name) async {
+    debugPrint('ADDING SOUND: "$name"');
+
     final soundMap = <String, SoundTrack>{
       'Rain': SoundTrack(
         id: 'rain',
@@ -532,6 +534,7 @@ class _MixerScreenState extends State<MixerScreen> {
         activeTracks.add(track);
       });
     } catch (e) {
+      debugPrint('FAILED TO ADD ${track.name}: $e');
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
