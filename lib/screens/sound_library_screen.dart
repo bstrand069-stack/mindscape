@@ -28,8 +28,9 @@ class SoundLibraryScreen extends StatelessWidget {
       ('White Noise', Icons.graphic_eq_rounded),
       ('Pink Noise', Icons.graphic_eq_rounded),
       ('Brown Noise', Icons.graphic_eq_rounded),
-      ('Green Noise', Icons.graphic_eq_rounded),
+      ('Violet Noise', Icons.graphic_eq_rounded),
       ('Blue Noise', Icons.graphic_eq_rounded),
+      ('Grey Noise', Icons.graphic_eq_rounded),
     ];
 
     Widget buildSoundTile((String, IconData) sound) {

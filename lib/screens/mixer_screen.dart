@@ -468,7 +468,7 @@ class _MixerScreenState extends State<MixerScreen> {
       'White Noise': SoundTrack(
         id: 'white_noise',
         name: 'White Noise',
-        assetPath: 'assets/audio/noise/white_noise.mp3',
+        assetPath: 'assets/audio/noise/white_noise.wav',
         category: SoundCategory.nature,
         volume: 0.25,
         enabled: true,
@@ -477,7 +477,7 @@ class _MixerScreenState extends State<MixerScreen> {
       'Pink Noise': SoundTrack(
         id: 'pink_noise',
         name: 'Pink Noise',
-        assetPath: 'assets/audio/noise/pink_noise.mp3',
+        assetPath: 'assets/audio/noise/pink_noise.wav',
         category: SoundCategory.nature,
         volume: 0.25,
         enabled: true,
@@ -486,16 +486,16 @@ class _MixerScreenState extends State<MixerScreen> {
       'Brown Noise': SoundTrack(
         id: 'brown_noise',
         name: 'Brown Noise',
-        assetPath: 'assets/audio/noise/brown_noise.mp3',
+        assetPath: 'assets/audio/noise/brown_noise.wav',
         category: SoundCategory.nature,
         volume: 0.25,
         enabled: true,
       ),
 
-      'Green Noise': SoundTrack(
-        id: 'green_noise',
-        name: 'Green Noise',
-        assetPath: 'assets/audio/noise/green_noise.mp3',
+      'Violet Noise': SoundTrack(
+        id: 'violet_noise',
+        name: 'Violet Noise',
+        assetPath: 'assets/audio/noise/violet_noise.wav',
         category: SoundCategory.nature,
         volume: 0.25,
         enabled: true,
@@ -504,7 +504,16 @@ class _MixerScreenState extends State<MixerScreen> {
       'Blue Noise': SoundTrack(
         id: 'blue_noise',
         name: 'Blue Noise',
-        assetPath: 'assets/audio/noise/blue_noise.mp3',
+        assetPath: 'assets/audio/noise/blue_noise.wav',
+        category: SoundCategory.nature,
+        volume: 0.25,
+        enabled: true,
+      ),
+
+      'Grey Noise': SoundTrack(
+        id: 'grey_noise',
+        name: 'Grey Noise',
+        assetPath: 'assets/audio/noise/grey_noise.wav',
         category: SoundCategory.nature,
         volume: 0.25,
         enabled: true,
@@ -705,7 +714,6 @@ class _MixerScreenState extends State<MixerScreen> {
 
               const SizedBox(height: 6),
 
-              if (sessionMinutes == -1)
                 _sectionCard(
                   title: 'Session Timer',
                   child: Column(
@@ -774,7 +782,7 @@ class _MixerScreenState extends State<MixerScreen> {
                                     });
                                   },
                           ),
-                          for (final minutes in [1, 15, 30, 45, 60])
+                          for (final minutes in [15, 30, 45, 60])
                             ChoiceChip(
                               label: Text('$minutes min'),
                               selected: sessionMinutes == minutes,
