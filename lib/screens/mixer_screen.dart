@@ -596,26 +596,6 @@ class _MixerScreenState extends State<MixerScreen> {
     });
   }
 
-  Future<void> _resetSession() async {
-    sessionTimer?.cancel();
-
-    for (final track in activeTracks) {
-      await _audioService.pauseTrack(track.id);
-    }
-
-    await _tonePlayer.pause();
-
-    if (!mounted) return;
-
-    setState(() {
-      playing = false;
-      sessionTimerPaused = false;
-      remainingSeconds = 0;
-      sessionMinutes = null;
-      sessionMessage = null;
-    });
-  }
-
   Future<void> _fadeOutSession() async {
     const steps = 20;
     const stepDelay = Duration(milliseconds: 150);
@@ -646,7 +626,7 @@ class _MixerScreenState extends State<MixerScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 180),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -714,95 +694,10 @@ class _MixerScreenState extends State<MixerScreen> {
 
               const SizedBox(height: 6),
 
-                _sectionCard(
-                  title: 'Session Timer',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (sessionMessage != null) ...[
-                        Text(
-                          sessionMessage!,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF82E5D4),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      Text(
-                        playing
-                            ? 'Session Playing'
-                            : sessionTimerPaused
-                            ? 'Session Paused'
-                            : 'Ready',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF82E5D4),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      if (remainingSeconds == 0 && sessionMinutes != null) ...[
-                        Text(
-                          'Selected: $sessionMinutes min',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF82E5D4),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      if (sessionMinutes != null &&
-                          (playing || sessionTimerPaused)) ...[
-                        Text(
-                          '${(remainingSeconds ~/ 60).toString().padLeft(2, '0')}:'
-                          '${(remainingSeconds % 60).toString().padLeft(2, '0')}',
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF82E5D4),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          ChoiceChip(
-                            label: const Text('No Timer'),
-                            selected: sessionMinutes == null,
-                            onSelected: playing || sessionTimerPaused
-                                ? null
-                                : (_) {
-                                    setState(() {
-                                      sessionMinutes = null;
-                                    });
-                                  },
-                          ),
-                          for (final minutes in [15, 30, 45, 60])
-                            ChoiceChip(
-                              label: Text('$minutes min'),
-                              selected: sessionMinutes == minutes,
-                              onSelected: playing || sessionTimerPaused
-                                  ? null
-                                  : (_) {
-                                      setState(() {
-                                        sessionMinutes = minutes;
-                                      });
-                                    },
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
               const SizedBox(height: 18),
               if (showBinauralTab)
                 _sectionCard(
-                  title: 'Brainwave Tone',
+                  title: 'Binaural Beats',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1068,6 +963,7 @@ class _MixerScreenState extends State<MixerScreen> {
                     ],
                   ), // Column
                 ), // _sectionCard
+              buildSessionActions(),
               const SizedBox(height: 4),
               if (loading)
                 const Center(
@@ -1083,65 +979,77 @@ class _MixerScreenState extends State<MixerScreen> {
                   textAlign: TextAlign.center,
                 ),
               const SizedBox(height: 10),
-              SizedBox(
-                height: 62,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [
-                        Color(0xFF75D98B),
-                        Color(0xFF65D4B1),
-                        Color(0xFF58AFCB),
-                        Color(0xFF7567C7),
-                      ],
-                      stops: [0.0, 0.32, 0.66, 1.0],
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: FilledButton.icon(
-                    onPressed: loading || audioError != null || toneUpdating
-                        ? null
-                        : _togglePlayback,
-                    icon: Icon(
-                      playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    ),
-                    label: Text(
-                      playing ? 'Pause Session' : 'Begin Session',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: const Color(0xFF05201D),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: _resetSession,
-                icon: const Icon(Icons.restart_alt),
-                label: const Text('Reset Session'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF82E5D4),
-                  side: const BorderSide(color: Color(0xFF526B78), width: 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget buildSessionActions() {
+    final activeNames = [
+      ...activeTracks.map((track) => track.name),
+      if (toneType != 'None') '$brainwave $toneType',
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF10283A),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF29485C)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFF173447),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.graphic_eq_rounded,
+              color: Color(0xFF82E5D4),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Current Mix',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  activeNames.isEmpty
+                      ? 'No sounds selected'
+                      : activeNames.join(', '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF8FA6B8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          IconButton(
+            onPressed: loading || audioError != null || toneUpdating
+                ? null
+                : _togglePlayback,
+            icon: Icon(
+              playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              size: 28,
+            ),
+            color: const Color(0xFF82E5D4),
+          ),
+        ],
       ),
     );
   }
