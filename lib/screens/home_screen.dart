@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'mixer_screen.dart';
+import 'timer_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -110,7 +110,7 @@ class HomeScreen extends StatelessWidget {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => const MixerScreen(),
+                          builder: (_) => const TimerScreen(),
                         ),
                       );
                     },
