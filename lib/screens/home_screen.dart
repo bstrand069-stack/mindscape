@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'timer_screen.dart';
+import 'preset_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -12,29 +13,18 @@ class HomeScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF071A2B),
-              Color(0xFF123C46),
-              Color(0xFF102D31),
-            ],
+            colors: [Color(0xFF071A2B), Color(0xFF123C46), Color(0xFF102D31)],
           ),
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 18,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Row(
                   children: [
-                    Icon(
-                      Icons.spa_rounded,
-                      color: Color(0xFF8DE3D0),
-                      size: 32,
-                    ),
+                    Icon(Icons.spa_rounded, color: Color(0xFF8DE3D0), size: 32),
                     SizedBox(width: 10),
                     Text(
                       'MindScape',
@@ -55,10 +45,7 @@ class HomeScreen extends StatelessWidget {
                 const Text(
                   'Find your quiet place.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(fontSize: 34, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 14),
                 Text(
@@ -74,10 +61,7 @@ class HomeScreen extends StatelessWidget {
                 const Text(
                   'How do you want to feel?',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 16),
                 const Wrap(
@@ -85,22 +69,10 @@ class HomeScreen extends StatelessWidget {
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    MoodChip(
-                      icon: Icons.self_improvement,
-                      label: 'Calm',
-                    ),
-                    MoodChip(
-                      icon: Icons.bedtime_rounded,
-                      label: 'Sleep',
-                    ),
-                    MoodChip(
-                      icon: Icons.center_focus_strong,
-                      label: 'Focus',
-                    ),
-                    MoodChip(
-                      icon: Icons.auto_awesome,
-                      label: 'Create',
-                    ),
+                    MoodChip(icon: Icons.self_improvement, label: 'Calm'),
+                    MoodChip(icon: Icons.bedtime_rounded, label: 'Sleep'),
+                    MoodChip(icon: Icons.center_focus_strong, label: 'Focus'),
+                    MoodChip(icon: Icons.auto_awesome, label: 'Create'),
                   ],
                 ),
                 const Spacer(),
@@ -109,9 +81,7 @@ class HomeScreen extends StatelessWidget {
                   child: FilledButton.icon(
                     onPressed: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const TimerScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const TimerScreen()),
                       );
                     },
                     icon: const Icon(Icons.play_arrow_rounded),
@@ -132,6 +102,18 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 18),
+                SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const PresetScreen()));
+            },
+            icon: const Icon(Icons.bookmarks_rounded),
+            label: const Text('Presets'),
+          ),
+        ),
               ],
             ),
           ),
@@ -145,34 +127,21 @@ class MoodChip extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const MoodChip({
-    super.key,
-    required this.icon,
-    required this.label,
-  });
+  const MoodChip({super.key, required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.12),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 19,
-            color: const Color(0xFF8DE3D0),
-          ),
+          Icon(icon, size: 19, color: const Color(0xFF8DE3D0)),
           const SizedBox(width: 8),
           Text(label),
         ],

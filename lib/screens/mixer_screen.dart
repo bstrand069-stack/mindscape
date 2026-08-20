@@ -8,7 +8,9 @@ import '../services/audio_service.dart';
 import '../services/tone_generator.dart';
 
 class MixerScreen extends StatefulWidget {
-  const MixerScreen({super.key});
+  const MixerScreen({super.key, this.presetName});
+
+  final String? presetName;
 
   @override
   State<MixerScreen> createState() => _MixerScreenState();
@@ -47,17 +49,63 @@ class _MixerScreenState extends State<MixerScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.presetName == 'Deep Sleep') {
+      debugPrint('Loading Deep Sleep preset');
+    }
 
-    activeTracks.add(
-      SoundTrack(
-        id: 'rain',
-        name: 'Rain',
-        assetPath: 'assets/audio/nature/rain.mp3',
-        category: SoundCategory.nature,
-        volume: 0.30,
-        enabled: true,
-      ),
-    );
+    if (widget.presetName == 'Deep Sleep') {
+      activeTracks.add(
+        SoundTrack(
+          id: 'rain',
+          name: 'Rain',
+          assetPath: 'assets/audio/nature/rain.mp3',
+          category: SoundCategory.nature,
+          volume: 0.30,
+          enabled: true,
+        ),
+      );
+
+      activeTracks.add(
+        SoundTrack(
+          id: 'brown_noise',
+          name: 'Brown Noise',
+          assetPath: 'assets/audio/noise/brown_noise.wav',
+          category: SoundCategory.nature,
+          volume: 0.25,
+          enabled: true,
+        ),
+      );
+    }
+
+    if (widget.presetName == 'Morning Focus') {
+      activeTracks.add(
+        SoundTrack(
+          id: 'forest',
+          name: 'Forest',
+          assetPath: 'assets/audio/nature/forest.mp3',
+          category: SoundCategory.nature,
+          volume: 0.30,
+          enabled: true,
+        ),
+      );
+      brainwave = 'Alpha';
+      beatHz = 10.0;
+    }
+    if (widget.presetName == 'Meditation Flow') {
+      activeTracks.add(
+        SoundTrack(
+          id: 'stream',
+          name: 'Stream',
+          assetPath: 'assets/audio/nature/stream.mp3',
+          category: SoundCategory.nature,
+          volume: 0.30,
+          enabled: true,
+        ),
+      );
+
+      brainwave = 'Theta';
+      beatHz = 6.0;
+    }
 
     _loadAudio();
   }
